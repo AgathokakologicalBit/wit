@@ -23,3 +23,7 @@ let cx_5 = 1 + 2 + 3 + 4 + 5 + 6 + 7 + 8 + 9 + 10
 let f_0 = a -> 0
 let f_1 = (a, b) -> (c, d) -> (c,d,a,b)
 let f_2 = a -> b, c -> d, e -> f
+
+let vt_0 : int = 5
+let vt_1 = 5 : int
+let vt_2 : int -> int = a -> a

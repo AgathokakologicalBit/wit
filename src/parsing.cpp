@@ -1,4 +1,4 @@
-#include "parsing.hpp"  
+#include "parsing.hpp"
 
 
 namespace akbit::system::parsing
@@ -76,6 +76,7 @@ namespace akbit::system::parsing
 
     if (state.is_failed())
     {
+      module->module.has_errors = state.is_failed();
       log_error(state);
       return module;
     }
@@ -100,7 +101,6 @@ namespace akbit::system::parsing
           return &container;
       }
 
-      container.module.has_errors = state.is_failed();
       return &container;
     }
 
@@ -115,13 +115,30 @@ namespace akbit::system::parsing
       auto idt = state.consume(TokenType::t_identifier);
       if (state.is_failed()) return &container;
       container.declaration.name = new std::string(idt.value);
-      container.declaration.type = nullptr;
-
-      if (state.peek().sub_type == TokenSubType::t_colon)
+      auto unode = new Node;
+      unode->type = NodeType::t_unknown;
+      auto data = parse_expression(unode, state, 2);
+      if (data != unode)
       {
-        container.declaration.type = parse_type(state);
-        if (state.is_failed()) return &container;
+        if (data->type == NodeType::t_binary_operation && data->binary_operation.operation == find_operator(":"))
+        {
+          delete unode;
+          data = (*data->binary_operation.operands)[1];
+        }
+        else
+        {
+          delete data;
+          data = unode;
+        }
       }
+      container.declaration.type = data;
+
+      // if (state.peek().sub_type == TokenSubType::t_colon)
+      // {
+      //   state.move();
+      //   container.declaration.type = parse_type(state);
+      //   if (state.is_failed()) return &container;
+      // }
 
       state.consume(TokenSubType::t_equal);
       if (state.is_failed()) return &container;
@@ -144,7 +161,7 @@ namespace akbit::system::parsing
     {
       state.save();
       operator_t const * operation = &parse_operator(state);
-      if (operation == &operator_unknown)
+      if (operation == &operator_unknown || operation->precedence < base_priority)
       {
         state.restore();
         return left_operand;

@@ -36,15 +36,23 @@ namespace akbit::system::parsing
     operator_t("||",   10, ASSOC_LEFT ),       // 17 - logical or
 
 
-    operator_t(":" ,    5, ASSOC_LEFT ),       // 18 - type cast
+    operator_t("->",    4, ASSOC_RIGHT),       // 18 - lambda function
+    operator_t("," ,    3, ASSOC_LEFT ),       // 19 - tupling
 
-    operator_t("->",    3, ASSOC_RIGHT),       // 19 - lambda function
-    operator_t("," ,    2, ASSOC_LEFT ),       // 20 - tupling
+    operator_t(":" ,    2, ASSOC_LEFT ),       // 20 - type cast
 
     operator_t("=" ,    1, ASSOC_RIGHT),       // 21 - assignment
     // TODO: Add assignments with operations
   };
 
   operator_t const & operator_unknown = operators_list[0];
-  operator_t const & operator_type_cast = operators_list[18];
+  operator_t const & operator_type_cast = operators_list[20];
+
+  operator_t const * find_operator(std::string representation)
+  {
+    for (auto& op : operators_list)
+      if (op.representation == representation)
+        return &op;
+    return nullptr;
+  }
 }

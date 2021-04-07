@@ -15,6 +15,8 @@ namespace akbit::system::parsing
 {
   enum class NodeType
   {
+    t_unknown,
+
     t_module,
 
     t_declaration,
@@ -32,6 +34,8 @@ namespace akbit::system::parsing
 
   enum class NodeValueType
   {
+    t_unknown,
+    
     t_type,
     t_function,
     t_array,

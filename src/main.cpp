@@ -49,7 +49,7 @@ void draw_p(std::uint32_t depth, std::uint64_t mask)
   std::wcout << L"\x1b[37m";
 }
 
-void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint64_t mask)
+void dump_ast(akbit::system::parsing::Node *node_, std::uint32_t depth, std::uint64_t mask)
 {
   using nt = akbit::system::parsing::NodeType;
   using nvt = akbit::system::parsing::NodeValueType;
@@ -58,6 +58,13 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
   draw_p(depth, mask);
   ++depth;
 
+  if (nullptr == node_)
+  {
+    std::cout << "\x1b[44mVOID*\x1b[49m";
+    return;
+  }
+
+  auto &node = *node_;
   std::cout << get_node_type_name(node.type) << ": ";
 
   switch (node.type)
@@ -66,8 +73,8 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
       for (std::size_t i = 0; i < node.module.data->size(); ++i)
       {
         if (i == node.module.data->size() - 1)
-          mask |= static_cast<std::uint64_t>(1) << 0;
-        dump_ast(*(*node.module.data)[i], depth, mask);
+          mask |= 1ul << 0u;
+        dump_ast((*node.module.data)[i], depth, mask);
       }
       break;
 
@@ -75,12 +82,18 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "name: ";
-      std::wcout << L"\x1b[97m";
+      std::cout << "\x1b[97m";
       std::cout << *node.declaration.name;
+
+      std::cout << '\n';
+      draw_p(depth, mask );
+      std::cout << "type: ";
+      std::cout << "\x1b[97m";
+      dump_ast(node.declaration.type, depth + 1u, mask | (1ul << (depth + 1u)));
 
       mask |= static_cast<std::uint64_t>(1) << depth;
 
-      dump_ast(*node.declaration.value, depth, mask);
+      dump_ast(node.declaration.value, depth, mask);
       break;
 
     case nt::t_value:
@@ -116,7 +129,7 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
       {
         if (i == node.binary_operation.operands->size() - 1)
           mask |= static_cast<std::uint64_t>(1) << depth;
-        dump_ast(*(*node.binary_operation.operands)[i], depth, mask);
+        dump_ast((*node.binary_operation.operands)[i], depth, mask);
       }
       break;
 
@@ -129,7 +142,7 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
 
       mask |= static_cast<std::uint64_t>(1) << depth;
 
-      dump_ast(*node.unary_operation.expression, depth, mask);
+      dump_ast(node.unary_operation.expression, depth, mask);
       break;
 
     case nt::t_function_call:
@@ -138,14 +151,14 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
       std::cout << "expression: ";
 
       mask |= static_cast<std::uint64_t>(1) << (depth + 1);
-      dump_ast(*node.call.expression, depth + 1u, mask);
+      dump_ast(node.call.expression, depth + 1u, mask);
 
       mask |= static_cast<std::uint64_t>(1) << depth;
 
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "arguments: ";
-      dump_ast(*node.call.arguments, depth + 1u, mask);
+      dump_ast(node.call.arguments, depth + 1u, mask);
       break;
 
     case nt::t_block:
@@ -153,7 +166,7 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
       {
         if (i == node.block.code->size() - 1)
           mask |= static_cast<std::uint64_t>(1) << depth;
-        dump_ast(*(*node.block.code)[i], depth, mask);
+        dump_ast((*node.block.code)[i], depth, mask);
       }
       break;
   }
@@ -177,7 +190,7 @@ int main(int argc, char* argv[])
   if (ast)
   {
     std::cout << "result: " << (ast->module.has_errors ? "failure" : "success") << std::endl;
-    dump_ast(*ast, -1u, 0ul);
+    dump_ast(ast, -1u, 0ul);
     std::cout << std::endl;
   }
   

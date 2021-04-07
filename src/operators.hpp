@@ -30,6 +30,8 @@ namespace akbit::system::parsing
     { }
   };
 
+  operator_t const * find_operator(std::string representation);
+
   extern std::array<operator_t const, 22> const operators_list;
 
   extern operator_t const & operator_unknown;
