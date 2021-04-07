@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 
 #include "lexing.hpp"
@@ -160,9 +161,13 @@ void dump_ast(akbit::system::parsing::Node &node, std::uint32_t depth, std::uint
 
 int main(int argc, char* argv[])
 {
-  std::string source{}, line;
-  while (getline(std::cin, line))
-    source += line + '\n';
+  // std::string source{}, line;
+  // while (getline(std::cin, line))
+  //   source += line + '\n';
+  
+  std::ifstream ifs("test_input.ws");
+  std::string source((std::istreambuf_iterator<char>(ifs)),
+                     (std::istreambuf_iterator<char>()   ));
   
   auto tokens = akbit::system::parsing::tokenize(source);
   for (auto t : tokens)
