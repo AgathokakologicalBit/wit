@@ -1,4 +1,5 @@
 #!/bin/bash
 
-
-clang++ -Wall -std=c++17 main.cpp token.cpp lexing.cpp parsing.cpp error_handling.cpp -o ./witcc
+mkdir -p ./build
+mkdir -p ./obj
+clang++ -Wall -std=c++17 -g3 src/main.cpp src/error_handling.cpp src/token.cpp src/lexing.cpp src/parsing.cpp -o ./build/witcc
