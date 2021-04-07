@@ -9,11 +9,12 @@ namespace akbit::system::parsing
   enum class error_t
   {
     // Empty
-    c_no_errors = 0,
+    e_no_errors = 0,
+    e_fatal_internal_error = 1,
 
 
     // Start up
-    c_file_does_not_exist = 1,
+    c_file_does_not_exist = 10,
 
 
     // Tokenization
@@ -26,7 +27,7 @@ namespace akbit::system::parsing
 
 
     // Parsing
-    // ...
+    p_unexpected_token = 2010,
 
 
     // Optimization

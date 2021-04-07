@@ -72,6 +72,7 @@ namespace akbit::system::parsing
     friend std::ostream &operator<<(std::ostream &, Token &);
   };
 
+  std::string get_type_name(TokenType type);
   std::string get_sub_type_name(TokenSubType type);
 
   std::ostream &operator<<(std::ostream &out, parsing::Token &token);
@@ -91,7 +92,7 @@ namespace akbit::system::parsing
     LexerState(std::string& source_)
       : index(0), line(1), column(1)
       , source(source_)
-      , error{error_t::c_no_errors, ""}
+      , error{error_t::e_no_errors, ""}
     { }
 
   public:
@@ -99,7 +100,7 @@ namespace akbit::system::parsing
     void move();
 
     constexpr inline bool is_eof() const noexcept { return index >= source.size(); }
-    constexpr inline bool is_error_occurred() const noexcept { return error.code != error_t::c_no_errors; }
+    constexpr inline bool is_error_occurred() const noexcept { return error.code != error_t::e_no_errors; }
   };
 
   /// Converts character to it's corresponding type

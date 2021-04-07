@@ -6,6 +6,23 @@
 
 namespace akbit::system::parsing
 {
+  std::string get_type_name(TokenType type)
+  {
+    using tt = TokenType;
+
+    switch (type)
+    {
+      case tt::t_commentary: return "commentary";
+      case tt::t_identifier: return "identifier";
+      case tt::t_character: return "character";
+      case tt::t_string: return "string";
+      case tt::t_number: return "number";
+      case tt::t_operator: return "operator";
+      case tt::t_eof: return "##EOF##";
+    
+      default: return "#???";
+    }
+  }
   std::string get_sub_type_name(TokenSubType type)
   {
     using tst = TokenSubType;

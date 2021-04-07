@@ -10,8 +10,8 @@ namespace akbit::system
     struct ParserState;
   }
 
-  void log_error(parsing::LexerState state);
-  // void log_error(parsing::ParserState state);
+  void log_error(parsing::LexerState &state);
+  void log_error(parsing::ParserState &state);
 }
 
 #endif

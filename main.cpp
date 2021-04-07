@@ -4,6 +4,7 @@
 
 
 #include "lexing.hpp"
+#include "parsing.hpp"
 
 
 int main(int argc, char* argv[])
@@ -12,8 +13,15 @@ int main(int argc, char* argv[])
   while (getline(std::cin, line))
     source += line + '\n';
   
-  auto result = akbit::system::parsing::tokenize(source);
-  for (auto t : result)
+  auto tokens = akbit::system::parsing::tokenize(source);
+  for (auto t : tokens)
     std::cout << t << std::endl;
+
+  auto ast = akbit::system::parsing::parse(tokens);
+  if (ast)
+  {
+    std::cout << "Sucess!" << std::endl;
+  }
+  
   return 0;
 }

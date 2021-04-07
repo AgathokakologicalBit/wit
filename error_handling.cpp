@@ -2,7 +2,7 @@
 
 #include "error_handling.hpp"
 #include "lexing.hpp"
-// #include "parsing.pp"
+#include "parsing.hpp"
 
 
 namespace akbit::system
@@ -14,7 +14,7 @@ namespace akbit::system
     std::cout << state.error.message << "\n\n";
   }
 
-  void log_error(parsing::LexerState state)
+  void log_error(parsing::LexerState &state)
   {
     log_error_common(state);
 
@@ -24,15 +24,14 @@ namespace akbit::system
     // throw std::runtime_error("halt");
   }
 
-  // void log_error(parsing::ParserState state)
-  // {
-  //   log_error_common(state);
+  void log_error(parsing::ParserState &state)
+  {
+    log_error_common(state);
 
-  //   std::cout << "Line: " << state.peek().line << "\n";
-  //   std::cout << "Column: " << state.peek().column << "\n\n";
-  //   // TODO: Implement specific error handling stuff
-  //   // TODO: Implement specific error handling stuff
-  //   // TODO: Implement specific error handling stuff
-  //   throw std::runtime_error("halt");
-  // }
+    std::cout << "Line: " << state.peek().line << "\n";
+    std::cout << "Column: " << state.peek().column << "\n\n";
+    // TODO: Implement specific error handling stuff
+    // TODO: Implement specific error handling stuff
+    // TODO: Implement specific error handling stuff
+  }
 }
