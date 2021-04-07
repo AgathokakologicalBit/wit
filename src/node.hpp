@@ -54,6 +54,7 @@ namespace akbit::system::parsing
       struct
       {
         std::vector<Node *> *data;
+        bool has_errors;
       } module;
 
       struct

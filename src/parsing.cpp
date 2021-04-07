@@ -1,4 +1,4 @@
-#include "parsing.hpp"
+#include "parsing.hpp"  
 
 
 namespace akbit::system::parsing
@@ -63,7 +63,7 @@ namespace akbit::system::parsing
     // Node * parse_function_declaration(ParserState &state);
 
     Node * parse_expression(ParserState &state);
-    // Node * parse_expression(Node * left_operand, ParserState &state, uint32_t base_priority);
+    Node * parse_expression(Node * left_operand, ParserState &state, uint32_t base_priority);
 
     Node * parse_declaration(ParserState &state);
     Node * parse_module(ParserState &state);
@@ -77,7 +77,7 @@ namespace akbit::system::parsing
     if (state.is_failed())
     {
       log_error(state);
-      return nullptr;
+      return module;
     }
 
     return module;
@@ -100,6 +100,7 @@ namespace akbit::system::parsing
           return &container;
       }
 
+      container.module.has_errors = state.is_failed();
       return &container;
     }
 
@@ -131,7 +132,89 @@ namespace akbit::system::parsing
 
     Node *parse_expression(ParserState &state)
     {
-      return parse_unit(state);
+      Node * left_operand = parse_unit(state);
+
+      if (state.is_failed())
+        return left_operand;
+
+      return parse_expression(left_operand, state, 0);
+    }
+
+    Node *parse_expression(Node *left_operand, ParserState &state, uint32_t base_priority)
+    {
+      state.save();
+      operator_t const * operation = &parse_operator(state);
+      if (operation == &operator_unknown)
+      {
+        state.restore();
+        return left_operand;
+      }
+      state.drop();
+
+      Node *right_operand = parse_unit(state);
+      if (state.is_failed())
+        return left_operand;
+
+      // Get next operator
+      state.save();
+      operator_t const * next_operation = &parse_operator(state);
+      if (state.is_failed()) { state.restore(); }
+      else state.drop();
+
+      while (next_operation->precedence > base_priority)
+      {
+          if (next_operation->precedence > operation->precedence)
+          {
+            // If the following operator has the higher priority
+            // parse that subexpression first
+            state.index -= next_operation->representation.size();
+            right_operand = parse_expression(right_operand, state, operation->precedence);
+            if (state.is_failed())
+              return left_operand;
+
+            state.save();
+            next_operation = &parse_operator(state);
+            if (state.is_failed()) { state.restore(); break; }
+            else state.drop();
+
+            if (next_operation->precedence <= base_priority)
+              break;
+          }
+
+          if (left_operand->type == NodeType::t_binary_operation && left_operand->binary_operation.operation == operation)
+          {
+            left_operand->binary_operation.operands->push_back(right_operand);
+          }
+          else
+          {
+            left_operand = make_node_bop(left_operand, right_operand, operation);
+          }
+
+          operation = next_operation;
+
+          right_operand = parse_unit(state);
+          if (state.is_failed())
+            return left_operand;
+
+          state.save();
+          next_operation = &parse_operator(state);
+          if (state.is_failed()) { state.restore(); break; }
+          else state.drop();
+      }
+
+      if (next_operation->precedence <= base_priority)
+        state.index -= next_operation->representation.size();
+
+      if (left_operand->type == NodeType::t_binary_operation && left_operand->binary_operation.operation == operation)
+      {
+        left_operand->binary_operation.operands->push_back(right_operand);
+      }
+      else
+      {
+        left_operand = make_node_bop(left_operand, right_operand, operation);
+      }
+
+      return left_operand;
     }
 
     Node *parse_unit(ParserState &state)
@@ -184,6 +267,19 @@ namespace akbit::system::parsing
           state.drop();
           container.value.type = NodeValueType::t_decimal;
           container.value.as_decimal = new std::string(tok.value);
+          return &container;
+        }
+        state.restore();
+      }
+
+      {
+        state.save();
+        tok = state.consume(TokenSubType::t_identifier);
+        if (not state.is_failed())
+        {
+          state.drop();
+          container.value.type = NodeValueType::t_variable;
+          container.value.as_variable = new std::string(tok.value);
           return &container;
         }
         state.restore();
