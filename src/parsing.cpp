@@ -1,4 +1,5 @@
 #include "parsing.hpp"
+#include <iostream>
 
 
 namespace akbit::system::parsing
@@ -136,6 +137,15 @@ namespace akbit::system::parsing
 
     Node *parse_unit(ParserState &state)
     {
+      if (state.peek().sub_type == TokenSubType::t_brace_round_left)
+      {
+        state.move();
+        auto res = parse_expression(state);
+        if (not state.is_failed())
+          state.consume(TokenSubType::t_brace_round_right);
+        return res;
+      }
+
       return parse_value(state);
     }
 
@@ -146,6 +156,7 @@ namespace akbit::system::parsing
 
       Node &container = *(new Node);
       container.type = NodeType::t_value;
+      container.value.type = NodeValueType::t_integer;
       container.value.as_integer = new std::string(it.value);
 
       return &container;
