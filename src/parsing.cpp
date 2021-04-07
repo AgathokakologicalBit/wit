@@ -1,5 +1,4 @@
 #include "parsing.hpp"
-#include <iostream>
 
 
 namespace akbit::system::parsing
@@ -55,7 +54,7 @@ namespace akbit::system::parsing
 
   namespace
   {
-    // operator_t const & parse_operator(ParserState &state);
+    operator_t const & parse_operator(ParserState &state);
 
     Node * parse_value(ParserState &state);
     Node * parse_unit(ParserState &state);
@@ -146,19 +145,62 @@ namespace akbit::system::parsing
         return res;
       }
 
+      if (state.peek().sub_type == TokenSubType::t_dash || state.peek().sub_type == TokenSubType::t_plus)
+      {
+        Node &container = *(new Node);
+        container.type = NodeType::t_unary_operation;
+        container.unary_operation.operation = &parse_operator(state);
+        container.unary_operation.expression = parse_unit(state);
+        return &container;
+      }
+
       return parse_value(state);
     }
 
     Node *parse_value(ParserState &state)
     {
-      auto it = state.consume(TokenSubType::t_integer);
-      if (state.is_failed()) return nullptr;
-
+      Token tok;
       Node &container = *(new Node);
       container.type = NodeType::t_value;
-      container.value.type = NodeValueType::t_integer;
-      container.value.as_integer = new std::string(it.value);
 
+      {
+        state.save();
+        tok = state.consume(TokenSubType::t_integer);
+        if (not state.is_failed())
+        {
+          state.drop();
+          container.value.type = NodeValueType::t_integer;
+          container.value.as_integer = new std::string(tok.value);
+          return &container;
+        }
+        state.restore();
+      }
+
+      {
+        state.save();
+        tok = state.consume(TokenSubType::t_decimal);
+        if (not state.is_failed())
+        {
+          state.drop();
+          container.value.type = NodeValueType::t_decimal;
+          container.value.as_decimal = new std::string(tok.value);
+          return &container;
+        }
+        state.restore();
+      }
+
+      {
+        state.save();
+        tok = state.consume(TokenSubType::t_string);
+        if (not state.is_failed())
+        {
+          state.drop();
+          container.value.type = NodeValueType::t_string;
+          container.value.as_string = new std::string(tok.value);
+          return &container;
+        }
+      }
+      
       return &container;
     }
 
@@ -167,6 +209,38 @@ namespace akbit::system::parsing
       state.error.code = error_t::e_fatal_internal_error;
       state.error.message = "Function 'parse_type' is not implemented";
       return nullptr;
+    }
+
+    operator_t const & parse_operator(ParserState &state)
+    {
+      state.save();
+      Token t = state.consume(TokenType::t_operator);
+      if (state.is_failed())
+      {
+        state.drop();
+        return operator_unknown;
+      }
+      state.restore();
+
+      operator_t const * operation = &operator_unknown;
+      std::string representation = "";
+      state.save();
+
+      while (state.peek().type == TokenType::t_operator && representation.size() < 5)
+      {
+        representation += state.peek().value;
+        state.move();
+
+        for (std::size_t index = 0; index < operators_list.size(); ++index)
+          if (operators_list[index].representation == representation)
+            operation = &operators_list[index];
+      }
+
+      state.restore();
+      for (std::size_t i = 0; i < operation->representation.size(); ++i)
+          state.move();
+
+      return *operation;
     }
   }
 }

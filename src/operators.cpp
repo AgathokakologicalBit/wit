@@ -3,7 +3,7 @@
 
 namespace akbit::system::parsing
 {
-  std::array<operator_t const, 23> const operators_list
+  std::array<operator_t const, 22> const operators_list
   {
     operator_t(""  ,    0, ASSOC_LEFT ),       //  0 - unknown
 
@@ -46,5 +46,5 @@ namespace akbit::system::parsing
   };
 
   operator_t const & operator_unknown = operators_list[0];
-  operator_t const & operator_type_cast = operators_list[22];
+  operator_t const & operator_type_cast = operators_list[18];
 }

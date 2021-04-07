@@ -30,7 +30,7 @@ namespace akbit::system::parsing
     { }
   };
 
-  extern std::array<operator_t const, 23> const operators_list;
+  extern std::array<operator_t const, 22> const operators_list;
 
   extern operator_t const & operator_unknown;
   extern operator_t const & operator_type_cast;
