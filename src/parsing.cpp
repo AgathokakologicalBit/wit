@@ -66,6 +66,7 @@ namespace akbit::system::parsing
     Node * parse_expression(Node * left_operand, ParserState &state, uint32_t base_priority);
 
     Node * parse_declaration(ParserState &state);
+    Node * parse_statement(ParserState &state);
     Node * parse_module(ParserState &state);
   }
 
@@ -95,13 +96,20 @@ namespace akbit::system::parsing
 
       while (!state.is_eof() && !state.is_failed())
       {
-        container.module.data->push_back(parse_declaration(state));
+        container.module.data->push_back(parse_statement(state));
 
         if (state.is_failed())
           return &container;
       }
 
       return &container;
+    }
+
+    Node *parse_statement(ParserState &state)
+    {
+      if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "let")
+        return parse_declaration(state);
+      return parse_expression(state);
     }
 
     Node *parse_declaration(ParserState &state)
@@ -239,10 +247,35 @@ namespace akbit::system::parsing
       if (state.peek().sub_type == TokenSubType::t_brace_round_left)
       {
         state.move();
+        if (state.peek().sub_type == TokenSubType::t_brace_round_right)
+        {
+          Node &container = *(new Node);
+          container.type = NodeType::t_value;
+          container.value.type = NodeValueType::t_tuple;
+          container.value.as_tuple.entries = new std::vector<Node*>();
+          state.move();
+          return &container;
+        }
+
         auto res = parse_expression(state);
         if (not state.is_failed())
           state.consume(TokenSubType::t_brace_round_right);
         return res;
+      }
+
+      if (state.peek().sub_type == TokenSubType::t_brace_curly_left)
+      {
+        state.move();
+        Node &container = *(new Node);
+        container.type = NodeType::t_block;
+        container.block.code = new std::vector<Node*>();
+        while (!state.is_eof() && !state.is_failed() && state.peek().sub_type != TokenSubType::t_brace_curly_right)
+        {
+          auto line = parse_statement(state);
+          container.block.code->push_back(line);
+        }
+        if (!state.is_failed()) state.consume(TokenSubType::t_brace_curly_right);
+        return &container;
       }
 
       if (state.peek().sub_type == TokenSubType::t_dash || state.peek().sub_type == TokenSubType::t_plus)
@@ -312,6 +345,7 @@ namespace akbit::system::parsing
           container.value.as_string = new std::string(tok.value);
           return &container;
         }
+        state.drop();
       }
       
       return &container;

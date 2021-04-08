@@ -35,9 +35,10 @@ namespace akbit::system::parsing
   enum class NodeValueType
   {
     t_unknown,
-    
+
     t_type,
     t_function,
+    t_tuple,
     t_array,
     
     t_variable,
@@ -134,6 +135,11 @@ namespace akbit::system::parsing
           {
             std::vector<Node *> *entries;
           } as_array;
+
+          struct
+          {
+            std::vector<Node *> *entries;
+          } as_tuple;
         };
       } value;
     };

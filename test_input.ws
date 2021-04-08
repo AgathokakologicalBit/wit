@@ -27,3 +27,9 @@ let f_2 = a -> b, c -> d, e -> f
 let vt_0 : int = 5
 let vt_1 = 5 : int
 let vt_2 : int -> int = a -> a
+
+let main = () -> {
+  let something = -1
+  let other = 9999
+  {-(something - other)}
+}
