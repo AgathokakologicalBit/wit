@@ -199,8 +199,8 @@ int main(int argc, char* argv[])
   auto ast = akbit::system::parsing::parse(tokens);
   if (ast)
   {
-    std::cout << "result: " << (ast->module.has_errors ? "failure" : "success") << std::endl;
     dump_ast(ast, -1u, 0ul);
+    std::cout << "\n\x1b[39mResult: " << (ast->module.has_errors ? "\x1b[01;41mFAILURE" : "\x1b[01;44mSUCCESS") << "\x1b[49m" << std::endl;
     std::cout << std::endl;
   }
   
