@@ -11,7 +11,7 @@
 #include "operators.hpp"
 
 
-namespace akbit::system::parsing
+namespace akbit::system
 {
   enum class NodeType
   {

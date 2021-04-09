@@ -1,7 +1,7 @@
 #include "../operators.hpp"
 
 
-namespace akbit::system::parsing
+namespace akbit::system
 {
   std::array<operator_t const, 22> const operators_list
   {

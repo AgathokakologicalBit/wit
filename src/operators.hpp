@@ -9,7 +9,7 @@
 #include <cstdint>
 
 
-namespace akbit::system::parsing
+namespace akbit::system
 {
   enum Associativity : bool
   {

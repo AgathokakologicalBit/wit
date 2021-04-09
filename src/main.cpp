@@ -11,9 +11,9 @@
 #include "parsing.hpp"
 
 
-std::string get_node_type_name(akbit::system::parsing::NodeType type)
+std::string get_node_type_name(akbit::system::NodeType type)
 {
-  using nt = akbit::system::parsing::NodeType;
+  using nt = akbit::system::NodeType;
   switch (type)
   {
     case nt::t_module: return "module";
@@ -52,10 +52,10 @@ void draw_p(std::uint32_t depth, std::uint64_t mask)
   std::wcout << L"\x1b[37m";
 }
 
-void dump_ast(akbit::system::parsing::Node *node_, std::uint32_t depth, std::uint64_t mask)
+void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mask)
 {
-  using nt = akbit::system::parsing::NodeType;
-  using nvt = akbit::system::parsing::NodeValueType;
+  using nt = akbit::system::NodeType;
+  using nvt = akbit::system::NodeValueType;
 
   std::cout << '\n';
   draw_p(depth, mask);
