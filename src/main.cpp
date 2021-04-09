@@ -193,8 +193,8 @@ int main(int argc, char* argv[])
                      (std::istreambuf_iterator<char>()   ));
   
   auto tokens = akbit::system::parsing::tokenize(source);
-  for (auto t : tokens)
-    std::cout << t << std::endl;
+  // for (auto t : tokens)
+  //   std::cout << t << std::endl;
 
   auto ast = akbit::system::parsing::parse(tokens);
   if (ast)
