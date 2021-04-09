@@ -94,6 +94,7 @@ namespace akbit::system::parsing
       auto &container = *(new Node);
       container.type = NodeType::t_module;
       container.module.data = new std::vector<Node*>;
+      container.module.has_errors = false;
 
       while (!state.is_eof() && !state.is_failed())
       {
