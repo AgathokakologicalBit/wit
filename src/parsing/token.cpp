@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "lexing.hpp"
+#include "../lexing.hpp"
 
 
 namespace akbit::system::parsing

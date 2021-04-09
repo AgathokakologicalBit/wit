@@ -1,7 +1,7 @@
 #include <utility>
 
-#include "lexing.hpp"
-#include "error_handling.hpp"
+#include "../lexing.hpp"
+#include "../error_handling.hpp"
 
 
 namespace akbit::system::parsing
