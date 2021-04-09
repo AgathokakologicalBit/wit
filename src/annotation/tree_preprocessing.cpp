@@ -129,6 +129,17 @@ namespace akbit::system::annotation
 
         memcpy(node, function_node, sizeof(*node));
       }
+      else if (node->binary_operation.operation == find_operator(","))
+      {
+        auto tuple = Node{};
+        tuple.type = NodeType::t_value;
+        tuple.value.type = NodeValueType::t_tuple;
+        tuple.value.as_tuple.entries = new std::vector<Node*>();
+        for (auto op : *node->binary_operation.operands)
+          tuple.value.as_tuple.entries->push_back(op);
+        
+        memcpy(node, &tuple, sizeof(tuple));
+      }
     }
 
     void tp_visit_function_call(Node *node)
