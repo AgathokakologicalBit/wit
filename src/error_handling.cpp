@@ -1,8 +1,8 @@
 #include <iostream>
 
 #include "error_handling.hpp"
-#include "lexing.hpp"
-#include "parsing.hpp"
+#include "parsing/lexing.hpp"
+#include "parsing/parsing.hpp"
 
 
 namespace akbit::system

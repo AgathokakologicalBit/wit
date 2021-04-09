@@ -1,6 +1,6 @@
 #include <utility>
 
-#include "../lexing.hpp"
+#include "lexing.hpp"
 #include "../error_handling.hpp"
 
 

@@ -6,9 +6,8 @@
 #include <cerrno>
 
 
-
-#include "lexing.hpp"
-#include "parsing.hpp"
+#include "parsing/lexing.hpp"
+#include "parsing/parsing.hpp"
 
 
 std::string get_node_type_name(akbit::system::NodeType type)

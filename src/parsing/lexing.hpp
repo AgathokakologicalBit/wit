@@ -9,7 +9,7 @@
 #include <vector>
 #include <string>
 
-#include "error.hpp"
+#include "../error.hpp"
 
 
 namespace akbit::system::parsing

@@ -7,10 +7,10 @@
 #include <vector>
 #include <string>
 
-#include "error_handling.hpp"
+#include "../error_handling.hpp"
 #include "lexing.hpp"
-#include "operators.hpp"
-#include "node.hpp"
+#include "../operators.hpp"
+#include "../node.hpp"
 
 
 namespace akbit::system::parsing
