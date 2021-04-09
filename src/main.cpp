@@ -116,22 +116,28 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
       switch (node.value.type)
       {
         case nvt::t_character:
+        {
           std::wcout << L'\'' << (wchar_t) node.value.as_character;
-          break;
+        } break;
         case nvt::t_integer:
+        {
           std::cout << *node.value.as_integer;
-          break;
+        } break;
         case nvt::t_decimal:
+        {
           std::cout << *node.value.as_decimal;
-          break;
+        } break;
         case nvt::t_string:
+        {
           std::cout << *node.value.as_string;
-          break;
+        } break;
         case nvt::t_variable:
+        {
           std::cout << *node.value.as_variable;
-          break;
+        } break;
         
         case nvt::t_tuple:
+        {
           std::cout << "\x1b[39m\x1b[44mTUPLE\x1b[49m";
           for (std::size_t i = 0; i < node.value.as_tuple.entries->size(); ++i)
           {
@@ -139,7 +145,23 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
               mask |= static_cast<std::uint64_t>(1) << depth;
             dump_ast((*node.value.as_tuple.entries)[i], depth, mask);
           }
-          break;
+        } break;
+        
+        case nvt::t_function:
+        {
+          std::cout << "\x1b[39m\x1b[44mFUNCTION\x1b[49m\n";
+          draw_p(depth, mask | (0ul << (depth + 0u)));
+          std::cout << "parameters:";
+          for (std::size_t i = 0; i < node.value.as_function.parameters->size(); ++i)
+          {
+            auto sub_mask = mask;
+            if (i == node.value.as_tuple.entries->size() - 1ul)
+              sub_mask |= static_cast<std::uint64_t>(1) << (depth + 1u);
+            dump_ast((*node.value.as_tuple.entries)[i], depth + 1, sub_mask);
+          }
+
+          dump_ast(node.value.as_function.body, depth, mask | (1ul << (depth + 0u)));
+        } break;
       }
     } break;
 
@@ -231,6 +253,7 @@ int main(int argc, char* argv[])
   auto ast = akbit::system::parsing::parse(tokens);
   if (!ast) return EXIT_FAILURE;
   
+  akbit::system::annotation::preprocess_ast(ast);
   akbit::system::annotation::generate_context(ast);
 
   dump_ast(ast, -1u, 0ul);

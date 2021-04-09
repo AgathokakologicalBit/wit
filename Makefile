@@ -1,12 +1,12 @@
 CXX = clang++
 CPP_VERSION = c++17
-CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra
+CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -g
 
 .PHONY: clean witcc
 .DEFAULT: witcc
 
 
-witcc: obj/main.o obj/error_handling.o obj/operators.o obj/token.o obj/lexing.o obj/parsing.o obj/context_generation.o
+witcc: obj/main.o obj/error_handling.o obj/operators.o obj/token.o obj/lexing.o obj/parsing.o obj/tree_preprocessing.o obj/context_generation.o
 	$(CXX) $(CFLAGS) -o $@ $?
 
 
@@ -35,6 +35,8 @@ obj/parsing.o: src/parsing/parsing.cpp src/parsing/parsing.hpp src/node.hpp src/
 obj/context_generation.o: src/annotation/context_generation.cpp src/annotation.hpp src/node.hpp obj
 	$(CXX) $(CFLAGS) -c $< -o $@
 
+obj/tree_preprocessing.o: src/annotation/tree_preprocessing.cpp src/annotation.hpp src/node.hpp obj
+	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f ./obj/*

@@ -86,6 +86,20 @@ namespace akbit::system::parsing
     return module;
   }
 
+  Node *convert_to_tuple(Node* node)
+  {
+    if (nullptr == node) return nullptr;
+    if (node->type == NodeType::t_value && node->value.type == NodeValueType::t_tuple)
+      return node;
+    
+    auto &container = *(new Node);
+    container.type = NodeType::t_value;
+    container.value.type = NodeValueType::t_tuple;
+    container.value.as_tuple.entries = new std::vector<Node*>();
+    container.value.as_tuple.entries->push_back(node);
+    return &container;
+  }
+
 
   namespace
   {
@@ -242,19 +256,6 @@ namespace akbit::system::parsing
       }
 
       return left_operand;
-    }
-
-    Node *convert_to_tuple(Node* node)
-    {
-      if (node->type == NodeType::t_value && node->value.type == NodeValueType::t_tuple)
-        return node;
-      
-      auto &container = *(new Node);
-      container.type = NodeType::t_value;
-      container.value.type = NodeValueType::t_tuple;
-      container.value.as_tuple.entries = new std::vector<Node*>();
-      container.value.as_tuple.entries->push_back(node);
-      return &container;
     }
 
     Node *parse_composite_unit(ParserState &state)
