@@ -1,7 +1,10 @@
 #include <string>
+#include <string.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <cerrno>
+
 
 
 #include "lexing.hpp"
@@ -187,8 +190,21 @@ int main(int argc, char* argv[])
   // std::string source{}, line;
   // while (getline(std::cin, line))
   //   source += line + '\n';
+
+  if (argc != 2)
+  {
+    char const *name = (argc > 0 ? argv[0] : "witcc");
+    std::cerr << "Usage: " << name << ' ' << "<filename>" << std::endl;
+    return EXIT_FAILURE;
+  }
   
-  std::ifstream ifs("test_input.ws");
+  std::ifstream ifs(argv[1]);
+  if (!ifs)
+  {
+    std::cerr << "File could not be opened!\n";
+    std::cerr << "Reason: " << strerror(errno) << std::endl;
+    return EXIT_FAILURE;
+  }
   std::string source((std::istreambuf_iterator<char>(ifs)),
                      (std::istreambuf_iterator<char>()   ));
   
@@ -204,5 +220,5 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
   }
   
-  return 0;
+  return EXIT_SUCCESS;
 }
