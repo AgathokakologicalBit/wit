@@ -58,6 +58,7 @@ namespace akbit::system::parsing
 
     Node * parse_value(ParserState &state);
     Node * parse_unit(ParserState &state);
+    Node * parse_composite_unit(ParserState &state);
     Node * parse_type(ParserState &state);
 
     // Node * parse_function_declaration(ParserState &state);
@@ -157,7 +158,7 @@ namespace akbit::system::parsing
 
     Node *parse_expression(ParserState &state)
     {
-      Node * left_operand = parse_unit(state);
+      Node * left_operand = parse_composite_unit(state);
 
       if (state.is_failed())
         return left_operand;
@@ -176,7 +177,7 @@ namespace akbit::system::parsing
       }
       state.drop();
 
-      Node *right_operand = parse_unit(state);
+      Node *right_operand = parse_composite_unit(state);
       if (state.is_failed())
         return left_operand;
 
@@ -217,7 +218,7 @@ namespace akbit::system::parsing
 
           operation = next_operation;
 
-          right_operand = parse_unit(state);
+          right_operand = parse_composite_unit(state);
           if (state.is_failed())
             return left_operand;
 
@@ -240,6 +241,37 @@ namespace akbit::system::parsing
       }
 
       return left_operand;
+    }
+
+    Node *convert_to_tuple(Node* node)
+    {
+      if (node->type == NodeType::t_value && node->value.type == NodeValueType::t_tuple)
+        return node;
+      
+      auto &container = *(new Node);
+      container.type = NodeType::t_value;
+      container.value.type = NodeValueType::t_tuple;
+      container.value.as_tuple.entries = new std::vector<Node*>();
+      container.value.as_tuple.entries->push_back(node);
+      return &container;
+    }
+
+    Node *parse_composite_unit(ParserState &state)
+    {
+      auto unit = parse_unit(state);
+      if (state.is_failed()) return unit;
+
+      // Function calls
+      while (state.peek().sub_type == TokenSubType::t_brace_round_left)
+      {
+        auto &container = *(new Node);
+        container.type = NodeType::t_function_call;
+        container.call.expression = unit;
+        container.call.arguments = convert_to_tuple(parse_unit(state));
+        unit = &container;
+      }
+
+      return unit;
     }
 
     Node *parse_unit(ParserState &state)
@@ -283,7 +315,7 @@ namespace akbit::system::parsing
         Node &container = *(new Node);
         container.type = NodeType::t_unary_operation;
         container.unary_operation.operation = &parse_operator(state);
-        container.unary_operation.expression = parse_unit(state);
+        container.unary_operation.expression = parse_composite_unit(state);
         return &container;
       }
 
