@@ -10,6 +10,7 @@ let real = 13.5
 
 let ux_0 = -7
 let ux_1 = +3
+let ux_2 = +--+-6
 
 
 let cx_0 = 1 + 2
