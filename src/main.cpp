@@ -120,7 +120,7 @@ void dump_ast(akbit::system::parsing::Node *node_, std::uint32_t depth, std::uin
           std::cout << "\x1b[39m\x1b[44mTUPLE\x1b[49m";
           for (std::size_t i = 0; i < node.value.as_tuple.entries->size(); ++i)
           {
-            if (i == node.block.code->size() - 1)
+            if (i == node.value.as_tuple.entries->size() - 1)
               mask |= static_cast<std::uint64_t>(1) << depth;
             dump_ast((*node.value.as_tuple.entries)[i], depth, mask);
           }
