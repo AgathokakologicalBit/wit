@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef AKBIT__SYSTEM__Node_HPP
-#define AKBIT__SYSTEM__Node_HPP
+#ifndef AKBIT__SYSTEM__NODE_HPP
+#define AKBIT__SYSTEM__NODE_HPP
 
 
 #include <cstddef>
@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "operators.hpp"
+#include "context.hpp"
 
 
 namespace akbit::system
@@ -53,6 +54,7 @@ namespace akbit::system
   struct Node
   {
     NodeType type;
+    Context *context;
 
     union
     {

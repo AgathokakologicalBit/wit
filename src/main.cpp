@@ -2,12 +2,14 @@
 #include <string.h>
 #include <vector>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <cerrno>
 
 
 #include "parsing/lexing.hpp"
 #include "parsing/parsing.hpp"
+#include "annotation.hpp"
 
 
 std::string get_node_type_name(akbit::system::NodeType type)
@@ -67,20 +69,30 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
   }
 
   auto &node = *node_;
-  std::cout << get_node_type_name(node.type) << ": ";
+  std::cout
+    << get_node_type_name(node.type)
+    << "(\x1b[33m0x" << std::setw(4) << std::setfill('0') << std::hex << node.context->id << "\x1b[39m)"
+    << ": ";
 
   switch (node.type)
   {
+    case nt::t_unknown:
+    {
+      std::cout << "\x1b[44mUNKNOWN*\x1b[49m";
+    } break;
+
     case nt::t_module:
+    {
       for (std::size_t i = 0; i < node.module.data->size(); ++i)
       {
         if (i == node.module.data->size() - 1)
           mask |= 1ul << 0u;
         dump_ast((*node.module.data)[i], depth, mask);
       }
-      break;
+    } break;
 
     case nt::t_declaration:
+    {
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "name: ";
@@ -96,9 +108,10 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
       mask |= static_cast<std::uint64_t>(1) << depth;
 
       dump_ast(node.declaration.value, depth, mask);
-      break;
+    } break;
 
     case nt::t_value:
+    {
       std::wcout << L"\x1b[95m";
       switch (node.value.type)
       {
@@ -128,9 +141,10 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
           }
           break;
       }
-      break;
+    } break;
 
     case nt::t_binary_operation:
+    {
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "operator: ";
@@ -143,9 +157,10 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
           mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast((*node.binary_operation.operands)[i], depth, mask);
       }
-      break;
+    } break;
 
     case nt::t_unary_operation:
+    {
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "operator: ";
@@ -155,9 +170,10 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
       mask |= static_cast<std::uint64_t>(1) << depth;
 
       dump_ast(node.unary_operation.expression, depth, mask);
-      break;
+    } break;
 
     case nt::t_function_call:
+    {
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "expression: ";
@@ -171,16 +187,17 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
       draw_p(depth, mask);
       std::cout << "arguments: ";
       dump_ast(node.call.arguments, depth + 1u, mask);
-      break;
+    } break;
 
     case nt::t_block:
+    {
       for (std::size_t i = 0; i < node.block.code->size(); ++i)
       {
         if (i == node.block.code->size() - 1)
           mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast((*node.block.code)[i], depth, mask);
       }
-      break;
+    } break;
   }
 }
 
@@ -212,12 +229,13 @@ int main(int argc, char* argv[])
   //   std::cout << t << std::endl;
 
   auto ast = akbit::system::parsing::parse(tokens);
-  if (ast)
-  {
-    dump_ast(ast, -1u, 0ul);
-    std::cout << "\n\x1b[39mResult: " << (ast->module.has_errors ? "\x1b[01;41mFAILURE" : "\x1b[01;44mSUCCESS") << "\x1b[49m" << std::endl;
-    std::cout << std::endl;
-  }
+  if (!ast) return EXIT_FAILURE;
+  
+  akbit::system::annotation::generate_context(ast);
+
+  dump_ast(ast, -1u, 0ul);
+  std::cout << "\n\x1b[39mResult: " << (ast->module.has_errors ? "\x1b[01;41mFAILURE" : "\x1b[01;44mSUCCESS") << "\x1b[49m" << std::endl;
+  std::cout << std::endl;
   
   return EXIT_SUCCESS;
 }
