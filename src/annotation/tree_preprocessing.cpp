@@ -65,24 +65,6 @@ namespace akbit::system::annotation
       }, node->value);
     }
 
-    // void tp_visit_value(std::shared_ptr<Node>& node)
-    // {
-    //   switch (node->value.type)
-    //   {
-    //     case NodeValueType::t_type: return tp_visit_value_type(node);
-    //     case NodeValueType::t_function: return tp_visit_value_function(node);
-    //     case NodeValueType::t_tuple: return tp_visit_value_tuple(node);
-    //     case NodeValueType::t_array: return tp_visit_value_array(node);
-    
-    //     case NodeValueType::t_variable: return tp_visit_value_variable(node);
-
-    //     case NodeValueType::t_string: return tp_visit_value_string(node);
-    //     case NodeValueType::t_character: return tp_visit_value_character(node);
-
-    //     case NodeValueType::t_integer: return tp_visit_value_integer(node);
-    //     case NodeValueType::t_decimal: return tp_visit_value_decimal(node);
-    //   }
-    // }
 
     void tp_visit_module(Node::module_t& node)
     {

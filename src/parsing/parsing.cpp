@@ -157,13 +157,6 @@ namespace akbit::system::parsing
       }
       std::get<Node::declaration_t>(container->value).type = data;
 
-      // if (state.peek().sub_type == TokenSubType::t_colon)
-      // {
-      //   state.move();
-      //   container.declaration.type = parse_type(state);
-      //   if (state.is_failed()) return &container;
-      // }
-
       state.consume(TokenSubType::t_equal);
       if (state.is_failed()) return container;
 
