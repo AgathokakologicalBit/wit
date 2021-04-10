@@ -106,8 +106,12 @@ namespace akbit::system::annotation
 
     void cg_visit_binary_operation(Node *node, Context *ctx, bool reg_vars)
     {
+      bool is_first = true;
       for (auto operand : *node->binary_operation.operands)
-        cg_visit(operand, ctx, reg_vars);
+      {
+        cg_visit(operand, ctx, reg_vars && (node->binary_operation.operation != find_operator(":") || is_first));
+        is_first = false;
+      }
     }
 
     void cg_visit_function_call(Node *node, Context *ctx, bool reg_vars)
