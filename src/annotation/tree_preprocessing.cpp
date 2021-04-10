@@ -1,195 +1,173 @@
+#include <memory>
+#include <type_traits>
+#include <variant>
 #include <string.h>
+
 
 #include "../annotation.hpp"
 #include "../node.hpp"
 
 
-namespace akbit::system::parsing { Node * convert_to_tuple(Node* node); }
+namespace akbit::system::parsing { std::shared_ptr<Node> convert_to_tuple(std::shared_ptr<Node> node); }
 
 namespace akbit::system::annotation
 {
   namespace
   {
+    template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+    template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
     // Context generation visitors
-    void tp_visit(Node *node);
+    void tp_visit(std::shared_ptr<Node> node);
 
-    void tp_visit_module(Node *node);
-    void tp_visit_declaration(Node *node);
-    void tp_visit_block(Node *node);
-    void tp_visit_unary_operation(Node *node);
-    void tp_visit_binary_operation(Node *node);
-    void tp_visit_function_call(Node *node);
-    void tp_visit_member_access(Node *node);
-    void tp_visit_type(Node *node);
-    void tp_visit_value(Node *node);
+    void tp_visit_module(Node::module_t& node);
+    void tp_visit_declaration(Node::declaration_t& node);
+    void tp_visit_block(Node::block_t& node);
+    void tp_visit_unary_operation(Node::unary_operation_t& node);
+    void tp_visit_binary_operation(std::shared_ptr<Node> node);
+    void tp_visit_function_call(Node::function_call_t& node);
 
-    void tp_visit_value_type(Node *node);
-    void tp_visit_value_function(Node *node);
-    void tp_visit_value_tuple(Node *node);
-    void tp_visit_value_array(Node *node);
-    void tp_visit_value_variable(Node *node);
-    void tp_visit_value_string(Node *node);
-    void tp_visit_value_character(Node *node);
-    void tp_visit_value_integer(Node *node);
-    void tp_visit_value_decimal(Node *node);
+    void tp_visit_value_function(Node::value_function_t& node);
+    void tp_visit_value_tuple(Node::value_tuple_t& node);
+    void tp_visit_value_variable(Node::value_variable_t& node);
+    void tp_visit_value_string(Node::value_string_t& node);
+    void tp_visit_value_character(Node::value_character_t& node);
+    void tp_visit_value_integer(Node::value_integer_t& node);
+    void tp_visit_value_decimal(Node::value_decimal_t& node);
   }
 
-  void preprocess_ast(Node *node)
+  void preprocess_ast(std::shared_ptr<Node> node)
   {
     tp_visit(node);
   }
 
   namespace
   {
-    void tp_visit(Node *node)
+
+    void tp_visit(std::shared_ptr<Node> node)
     {
       if (nullptr == node) return;
-
-      switch (node->type)
-      {
-        case NodeType::t_module: return tp_visit_module(node);
-        case NodeType::t_declaration: return tp_visit_declaration(node);
-        case NodeType::t_block: return tp_visit_block(node);
-
-        case NodeType::t_unary_operation: return tp_visit_unary_operation(node);
-        case NodeType::t_binary_operation: return tp_visit_binary_operation(node);
-
-        case NodeType::t_function_call: return tp_visit_function_call(node);
-        case NodeType::t_member_access: return tp_visit_member_access(node);
-
-        case NodeType::t_type: return tp_visit_type(node);
-        case NodeType::t_value: return tp_visit_value(node);
-      }
+      std::visit(overloaded {
+        [](auto                     &_) {                                  },
+        [](Node::module_t           &_) { tp_visit_module(_);              },
+        [](Node::declaration_t      &_) { tp_visit_declaration(_);         },
+        [](Node::block_t            &_) { tp_visit_block(_);               },
+        [](Node::unary_operation_t  &_) { tp_visit_unary_operation(_);     },
+        [&](Node::binary_operation_t &_) { tp_visit_binary_operation(node); },
+        [](Node::function_call_t    &_) { tp_visit_function_call(_);       },
+        [](Node::value_function_t   &_) { tp_visit_value_function(_);      },
+        [](Node::value_tuple_t      &_) { tp_visit_value_tuple(_);         },
+        [](Node::value_variable_t   &_) { tp_visit_value_variable(_);      },
+        [](Node::value_string_t     &_) { tp_visit_value_string(_);        },
+        [](Node::value_character_t  &_) { tp_visit_value_character(_);     },
+        [](Node::value_integer_t    &_) { tp_visit_value_integer(_);       },
+        [](Node::value_decimal_t    &_) { tp_visit_value_decimal(_);       },
+      }, node->value);
     }
 
-    void tp_visit_value(Node *node)
-    {
-      switch (node->value.type)
-      {
-        case NodeValueType::t_type: return tp_visit_value_type(node);
-        case NodeValueType::t_function: return tp_visit_value_function(node);
-        case NodeValueType::t_tuple: return tp_visit_value_tuple(node);
-        case NodeValueType::t_array: return tp_visit_value_array(node);
+    // void tp_visit_value(std::shared_ptr<Node>& node)
+    // {
+    //   switch (node->value.type)
+    //   {
+    //     case NodeValueType::t_type: return tp_visit_value_type(node);
+    //     case NodeValueType::t_function: return tp_visit_value_function(node);
+    //     case NodeValueType::t_tuple: return tp_visit_value_tuple(node);
+    //     case NodeValueType::t_array: return tp_visit_value_array(node);
     
-        case NodeValueType::t_variable: return tp_visit_value_variable(node);
+    //     case NodeValueType::t_variable: return tp_visit_value_variable(node);
 
-        case NodeValueType::t_string: return tp_visit_value_string(node);
-        case NodeValueType::t_character: return tp_visit_value_character(node);
+    //     case NodeValueType::t_string: return tp_visit_value_string(node);
+    //     case NodeValueType::t_character: return tp_visit_value_character(node);
 
-        case NodeValueType::t_integer: return tp_visit_value_integer(node);
-        case NodeValueType::t_decimal: return tp_visit_value_decimal(node);
-      }
-    }
+    //     case NodeValueType::t_integer: return tp_visit_value_integer(node);
+    //     case NodeValueType::t_decimal: return tp_visit_value_decimal(node);
+    //   }
+    // }
 
-    void tp_visit_module(Node *node)
+    void tp_visit_module(Node::module_t& node)
     {
-      for (auto d : *node->module.data)
+      for (auto d : node.data)
         tp_visit(d);
     }
 
-    void tp_visit_declaration(Node *node)
+    void tp_visit_declaration(Node::declaration_t& node)
     {
-      tp_visit(node->declaration.type);
-      tp_visit(node->declaration.value);
+      tp_visit(node.type);
+      tp_visit(node.value);
     }
 
-    void tp_visit_block(Node *node)
+    void tp_visit_block(Node::block_t& node)
     {
-      for (auto stmt : *node->block.code)
+      for (auto stmt : node.code)
         tp_visit(stmt);
     }
 
-    void tp_visit_unary_operation(Node *node)
+    void tp_visit_unary_operation(Node::unary_operation_t& node)
     {
-      tp_visit(node->unary_operation.expression);
+      tp_visit(node.expression);
     }
 
-    void tp_visit_binary_operation(Node *node)
+    void tp_visit_binary_operation(std::shared_ptr<Node> node_)
     {
-      for (auto operand : *node->binary_operation.operands)
+      Node::binary_operation_t& node = std::get<Node::binary_operation_t>(node_->value);
+      for (auto operand : node.operands)
         tp_visit(operand);
 
-      if (node->binary_operation.operation == find_operator("->"))
+      if (node.operation == find_operator("->"))
       {
-        auto function_node = node->binary_operation.operands->at(node->binary_operation.operands->size() - 1);
+        auto function_node = node.operands.at(node.operands.size() - 1);
 
         // because i is unsigned, going towards 0 should be done using a special operator
-        std::size_t i = node->binary_operation.operands->size() - 1;
+        std::size_t i = node.operands.size() - 1;
         while (i --> 0)
         {
-          auto nfn = new Node;
-          nfn->type = NodeType::t_value;
-          nfn->value.type = NodeValueType::t_function;
-          nfn->context = nullptr;
-          auto tmp_tuple = parsing::convert_to_tuple((*node->binary_operation.operands)[i]);
-          nfn->value.as_function.parameters = tmp_tuple->value.as_tuple.entries;
-          delete tmp_tuple;
-          nfn->value.as_function.body = function_node;
+          auto tmp_tuple = parsing::convert_to_tuple(node.operands[i]);
+          auto nfn = std::make_shared<Node>(Node::value_function_t{
+            .parameters = std::get<Node::value_tuple_t>(tmp_tuple->value).entries,
+          });
+          std::get<Node::value_function_t>(nfn->value).body = function_node;
           function_node = nfn;
         }
 
-        memcpy(node, function_node, sizeof(*node));
+        *node_ = *function_node;
       }
-      else if (node->binary_operation.operation == find_operator(","))
+      else if (node.operation == find_operator(","))
       {
-        auto tuple = Node{};
-        tuple.type = NodeType::t_value;
-        tuple.value.type = NodeValueType::t_tuple;
-        tuple.value.as_tuple.entries = new std::vector<Node*>();
-        for (auto op : *node->binary_operation.operands)
-          tuple.value.as_tuple.entries->push_back(op);
+        Node tuple(Node::value_tuple_t{
+          .entries = {},
+        });
+
+        for (auto op : node.operands)
+          std::get<Node::value_tuple_t>(tuple.value).entries.push_back(op);
         
-        memcpy(node, &tuple, sizeof(tuple));
+        *node_ = tuple;
       }
     }
 
-    void tp_visit_function_call(Node *node)
+    void tp_visit_function_call(Node::function_call_t& node)
     {
-      tp_visit(node->call.expression);
-      tp_visit(node->call.arguments);
+      tp_visit(node.expression);
+      tp_visit(node.arguments);
     }
 
-    void tp_visit_member_access([[maybe_unused]] Node *node)
-    {
-      // non-existent
-      // TODO: Implement
-    }
 
-    void tp_visit_type([[maybe_unused]] Node *node)
+    void tp_visit_value_function(Node::value_function_t& node)
     {
-      // non-existent
-      // TODO: Implement
-    }
-
-    void tp_visit_value_type([[maybe_unused]] Node *node)
-    {
-      // non-existent
-      // TODO: Implement
-    }
-
-    void tp_visit_value_function(Node *node)
-    {
-      for (auto param : *node->value.as_function.parameters)
+      for (auto param : node.parameters)
         tp_visit(param);
-      tp_visit(node->value.as_function.body);
+      tp_visit(node.body);
     }
 
-    void tp_visit_value_tuple(Node *node)
+    void tp_visit_value_tuple(Node::value_tuple_t& node)
     {
-      for (auto entry : *node->value.as_tuple.entries)
+      for (auto entry : node.entries)
         tp_visit(entry);
     }
 
-    void tp_visit_value_array(Node *node)
-    {
-      for (auto entry : *node->value.as_array.entries)
-        tp_visit(entry);
-    }
-
-    void tp_visit_value_variable([[maybe_unused]] Node *node) { }
-    void tp_visit_value_string([[maybe_unused]] Node *node) { }
-    void tp_visit_value_character([[maybe_unused]] Node *node) { }
-    void tp_visit_value_integer([[maybe_unused]] Node *node) { }
-    void tp_visit_value_decimal([[maybe_unused]] Node *node) { }
+    void tp_visit_value_variable([[maybe_unused]] Node::value_variable_t& node) { }
+    void tp_visit_value_string([[maybe_unused]] Node::value_string_t& node) { }
+    void tp_visit_value_character([[maybe_unused]] Node::value_character_t& node) { }
+    void tp_visit_value_integer([[maybe_unused]] Node::value_integer_t& node) { }
+    void tp_visit_value_decimal([[maybe_unused]] Node::value_decimal_t& node) { }
   }
 }

@@ -69,7 +69,7 @@ namespace akbit::system::parsing
     friend void ::akbit::system::log_error(ParserState &state);
   };
 
-  Node *parse(std::vector<Token> &tokens);
+  std::shared_ptr<Node> parse(std::vector<Token> &tokens);
 }
 
 #endif

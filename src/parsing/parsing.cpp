@@ -56,29 +56,29 @@ namespace akbit::system::parsing
   {
     operator_t const & parse_operator(ParserState &state);
 
-    Node * parse_value(ParserState &state);
-    Node * parse_unit(ParserState &state);
-    Node * parse_composite_unit(ParserState &state);
-    Node * parse_type(ParserState &state);
+    std::shared_ptr<Node> parse_value(ParserState &state);
+    std::shared_ptr<Node> parse_unit(ParserState &state);
+    std::shared_ptr<Node> parse_composite_unit(ParserState &state);
+    std::shared_ptr<Node> parse_type(ParserState &state);
 
     // Node * parse_function_declaration(ParserState &state);
 
-    Node * parse_expression(ParserState &state);
-    Node * parse_expression(Node * left_operand, ParserState &state, uint32_t base_priority);
+    std::shared_ptr<Node> parse_expression(ParserState &state);
+    std::shared_ptr<Node> parse_expression(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority);
 
-    Node * parse_declaration(ParserState &state);
-    Node * parse_statement(ParserState &state);
-    Node * parse_module(ParserState &state);
+    std::shared_ptr<Node> parse_declaration(ParserState &state);
+    std::shared_ptr<Node> parse_statement(ParserState &state);
+    std::shared_ptr<Node> parse_module(ParserState &state);
   }
 
-  Node *parse(std::vector<Token> &tokens)
+  std::shared_ptr<Node> parse(std::vector<Token> &tokens)
   {
     ParserState state(tokens);
     auto module = parse_module(state);
 
     if (state.is_failed())
     {
-      module->module.has_errors = state.is_failed();
+      std::get<Node::module_t>(module->value).has_errors = state.is_failed();
       log_error(state);
       return module;
     }
@@ -86,83 +86,76 @@ namespace akbit::system::parsing
     return module;
   }
 
-  Node *convert_to_tuple(Node* node)
+  std::shared_ptr<Node> convert_to_tuple(std::shared_ptr<Node> node)
   {
     if (nullptr == node) return nullptr;
-    if (node->type == NodeType::t_value && node->value.type == NodeValueType::t_tuple)
+    try
+    {
+      std::get<Node::value_tuple_t>(node->value);
       return node;
+    }
+    catch (...) { }
     
-    auto &container = *(new Node);
-    container.type = NodeType::t_value;
-    container.context = nullptr;
-    container.value.type = NodeValueType::t_tuple;
-    container.value.as_tuple.entries = new std::vector<Node*>();
-    container.value.as_tuple.entries->push_back(node);
-    return &container;
+    auto container = std::make_shared<Node>(Node::value_tuple_t{
+      .entries = {
+        {node}
+      }
+    });
+    return container;
   }
 
 
   namespace
   {
-    Node *parse_module(ParserState &state)
+    std::shared_ptr<Node> parse_module(ParserState &state)
     {
-      auto &container = *(new Node);
-      container.type = NodeType::t_module;
-      container.context = nullptr;
-      container.module.data = new std::vector<Node*>;
-      container.module.has_errors = false;
+      auto container = std::make_shared<Node>(Node::module_t{
+        .data = {},
+        .has_errors = false,
+      });
 
       while (!state.is_eof() && !state.is_failed())
       {
-        container.module.data->push_back(parse_statement(state));
+        std::get<Node::module_t>(container->value).data.push_back(parse_statement(state));
 
         if (state.is_failed())
-          return &container;
+          return container;
       }
 
-      return &container;
+      return container;
     }
 
-    Node *parse_statement(ParserState &state)
+    std::shared_ptr<Node> parse_statement(ParserState &state)
     {
       if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "let")
         return parse_declaration(state);
       return parse_expression(state);
     }
 
-    Node *parse_declaration(ParserState &state)
+    std::shared_ptr<Node> parse_declaration(ParserState &state)
     {
       state.consume(TokenSubType::t_identifier, "let");
       if (state.is_failed()) return nullptr;
 
-      Node &container = *(new Node);
-      container.type = NodeType::t_declaration;
-      container.context = nullptr;
-      container.declaration.name = nullptr;
-      container.declaration.type = nullptr;
-      container.declaration.value = nullptr;
-
+      auto container = std::make_shared<Node>(Node::declaration_t{});
       auto idt = state.consume(TokenType::t_identifier);
-      if (state.is_failed()) return &container;
-      container.declaration.name = new std::string(idt.value);
-      auto unode = new Node;
-      unode->type = NodeType::t_unknown;
-      unode->context = nullptr;
+      if (state.is_failed()) return container;
+
+      std::get<Node::declaration_t>(container->value).name = idt.value;
+      auto unode = std::make_shared<Node>();
       auto data = parse_expression(unode, state, 2);
       if (data != unode)
       {
-        if (data->type == NodeType::t_binary_operation && data->binary_operation.operation == find_operator(":"))
+        if (data->value.index() == 4 && std::get<Node::binary_operation_t>(data->value).operation == find_operator(":"))
         {
-          delete unode;
-          data = (*data->binary_operation.operands)[1];
+          data = std::get<Node::binary_operation_t>(data->value).operands[1];
         }
         else
         {
-          delete data;
           data = unode;
         }
       }
-      container.declaration.type = data;
+      std::get<Node::declaration_t>(container->value).type = data;
 
       // if (state.peek().sub_type == TokenSubType::t_colon)
       // {
@@ -172,15 +165,15 @@ namespace akbit::system::parsing
       // }
 
       state.consume(TokenSubType::t_equal);
-      if (state.is_failed()) return &container;
+      if (state.is_failed()) return container;
 
-      container.declaration.value = parse_expression(state);
-      return &container;
+      std::get<Node::declaration_t>(container->value).value = parse_expression(state);
+      return container;
     }
 
-    Node *parse_expression(ParserState &state)
+    std::shared_ptr<Node> parse_expression(ParserState &state)
     {
-      Node * left_operand = parse_composite_unit(state);
+      std::shared_ptr<Node> left_operand = parse_composite_unit(state);
 
       if (state.is_failed())
         return left_operand;
@@ -188,7 +181,7 @@ namespace akbit::system::parsing
       return parse_expression(left_operand, state, 0);
     }
 
-    Node *parse_expression(Node *left_operand, ParserState &state, uint32_t base_priority)
+    std::shared_ptr<Node> parse_expression(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority)
     {
       state.save();
       operator_t const * operation = &parse_operator(state);
@@ -199,7 +192,7 @@ namespace akbit::system::parsing
       }
       state.drop();
 
-      Node *right_operand = parse_composite_unit(state);
+      std::shared_ptr<Node> right_operand = parse_composite_unit(state);
       if (state.is_failed())
         return left_operand;
 
@@ -229,9 +222,9 @@ namespace akbit::system::parsing
               break;
           }
 
-          if (left_operand->type == NodeType::t_binary_operation && left_operand->binary_operation.operation == operation)
+          if (left_operand->value.index() == 4 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
           {
-            left_operand->binary_operation.operands->push_back(right_operand);
+            std::get<Node::binary_operation_t>(left_operand->value).operands.push_back(right_operand);
           }
           else
           {
@@ -253,9 +246,9 @@ namespace akbit::system::parsing
       if (next_operation->precedence <= base_priority)
         state.index -= next_operation->representation.size();
 
-      if (left_operand->type == NodeType::t_binary_operation && left_operand->binary_operation.operation == operation)
+      if (left_operand->value.index() == 4 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
       {
-        left_operand->binary_operation.operands->push_back(right_operand);
+        std::get<Node::binary_operation_t>(left_operand->value).operands.push_back(right_operand);
       }
       else
       {
@@ -265,7 +258,7 @@ namespace akbit::system::parsing
       return left_operand;
     }
 
-    Node *parse_composite_unit(ParserState &state)
+    std::shared_ptr<Node> parse_composite_unit(ParserState &state)
     {
       auto unit = parse_unit(state);
       if (state.is_failed()) return unit;
@@ -273,31 +266,28 @@ namespace akbit::system::parsing
       // Function calls
       while (state.peek().sub_type == TokenSubType::t_brace_round_left)
       {
-        auto &container = *(new Node);
-        container.type = NodeType::t_function_call;
-        container.context = nullptr;
-        container.call.expression = unit;
-        container.call.arguments = convert_to_tuple(parse_unit(state));
-        unit = &container;
+        auto container = std::make_shared<Node>(Node::function_call_t{
+          .expression = unit,
+          .arguments = convert_to_tuple(parse_unit(state))
+        });
+        unit = container;
       }
 
       return unit;
     }
 
-    Node *parse_unit(ParserState &state)
+    std::shared_ptr<Node> parse_unit(ParserState &state)
     {
       if (state.peek().sub_type == TokenSubType::t_brace_round_left)
       {
         state.move();
         if (state.peek().sub_type == TokenSubType::t_brace_round_right)
         {
-          Node &container = *(new Node);
-          container.type = NodeType::t_value;
-          container.context = nullptr;
-          container.value.type = NodeValueType::t_tuple;
-          container.value.as_tuple.entries = new std::vector<Node*>();
+          auto container = std::make_shared<Node>(Node::value_tuple_t{
+            .entries = {},
+          });
           state.move();
-          return &container;
+          return container;
         }
 
         auto res = parse_expression(state);
@@ -309,38 +299,38 @@ namespace akbit::system::parsing
       if (state.peek().sub_type == TokenSubType::t_brace_curly_left)
       {
         state.move();
-        Node &container = *(new Node);
-        container.type = NodeType::t_block;
-        container.context = nullptr;
-        container.block.code = new std::vector<Node*>();
+        auto container = std::make_shared<Node>(Node::block_t{
+          .code = {},
+        });
+
         while (!state.is_eof() && !state.is_failed() && state.peek().sub_type != TokenSubType::t_brace_curly_right)
         {
           auto line = parse_statement(state);
-          container.block.code->push_back(line);
+          std::get<Node::block_t>(container->value).code.push_back(line);
         }
-        if (!state.is_failed()) state.consume(TokenSubType::t_brace_curly_right);
-        return &container;
+        
+        if (!state.is_failed())
+          state.consume(TokenSubType::t_brace_curly_right);
+
+        return container;
       }
 
       if (state.peek().sub_type == TokenSubType::t_dash || state.peek().sub_type == TokenSubType::t_plus)
       {
-        Node &container = *(new Node);
-        container.type = NodeType::t_unary_operation;
-        container.context = nullptr;
-        container.unary_operation.operation = &parse_operator(state);
-        container.unary_operation.expression = parse_composite_unit(state);
-        return &container;
+        auto container = std::make_shared<Node>(Node::unary_operation_t{
+          .operation = &parse_operator(state),
+          .expression = parse_composite_unit(state),
+        });
+        return container;
       }
 
       return parse_value(state);
     }
 
-    Node *parse_value(ParserState &state)
+    std::shared_ptr<Node> parse_value(ParserState &state)
     {
       Token tok;
-      Node &container = *(new Node);
-      container.type = NodeType::t_value;
-      container.context = nullptr;
+      auto container = std::make_shared<Node>();
 
       {
         state.save();
@@ -348,9 +338,8 @@ namespace akbit::system::parsing
         if (not state.is_failed())
         {
           state.drop();
-          container.value.type = NodeValueType::t_integer;
-          container.value.as_integer = new std::string(tok.value);
-          return &container;
+          container->value = Node::value_integer_t({ .value = tok.value });
+          return container;
         }
         state.restore();
       }
@@ -361,9 +350,8 @@ namespace akbit::system::parsing
         if (not state.is_failed())
         {
           state.drop();
-          container.value.type = NodeValueType::t_decimal;
-          container.value.as_decimal = new std::string(tok.value);
-          return &container;
+          container->value = Node::value_decimal_t({ .value = tok.value });
+          return container;
         }
         state.restore();
       }
@@ -374,10 +362,8 @@ namespace akbit::system::parsing
         if (not state.is_failed())
         {
           state.drop();
-          container.value.type = NodeValueType::t_variable;
-          container.value.as_variable.name = new std::string(tok.value);
-          container.value.as_variable.record = nullptr;
-          return &container;
+          container->value = Node::value_variable_t({ .name = tok.value });
+          return container;
         }
         state.restore();
       }
@@ -388,17 +374,16 @@ namespace akbit::system::parsing
         if (not state.is_failed())
         {
           state.drop();
-          container.value.type = NodeValueType::t_string;
-          container.value.as_string = new std::string(tok.value);
-          return &container;
+          container->value = Node::value_string_t({ .value = tok.value });
+          return container;
         }
         state.drop();
       }
       
-      return &container;
+      return container;
     }
 
-    Node *parse_type(ParserState &state)
+    std::shared_ptr<Node> parse_type(ParserState &state)
     {
       state.error.code = error_t::e_fatal_internal_error;
       state.error.message = "Function 'parse_type' is not implemented";

@@ -8,8 +8,8 @@
 
 namespace akbit::system::annotation
 {
-  void preprocess_ast(Node *node);
-  void generate_context(Node *node);
+  void preprocess_ast(std::shared_ptr<Node> node);
+  void generate_context(std::shared_ptr<Node> node);
 }
 
 #endif

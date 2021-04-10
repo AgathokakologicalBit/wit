@@ -1,5 +1,5 @@
 CXX = clang++
-CPP_VERSION = c++17
+CPP_VERSION = c++20
 CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -g
 
 .PHONY: clean witcc
