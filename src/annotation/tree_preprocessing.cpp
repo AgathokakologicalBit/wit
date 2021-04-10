@@ -120,6 +120,7 @@ namespace akbit::system::annotation
           auto nfn = new Node;
           nfn->type = NodeType::t_value;
           nfn->value.type = NodeValueType::t_function;
+          nfn->context = nullptr;
           auto tmp_tuple = parsing::convert_to_tuple((*node->binary_operation.operands)[i]);
           nfn->value.as_function.parameters = tmp_tuple->value.as_tuple.entries;
           delete tmp_tuple;

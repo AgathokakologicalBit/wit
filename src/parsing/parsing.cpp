@@ -94,6 +94,7 @@ namespace akbit::system::parsing
     
     auto &container = *(new Node);
     container.type = NodeType::t_value;
+    container.context = nullptr;
     container.value.type = NodeValueType::t_tuple;
     container.value.as_tuple.entries = new std::vector<Node*>();
     container.value.as_tuple.entries->push_back(node);
@@ -107,6 +108,7 @@ namespace akbit::system::parsing
     {
       auto &container = *(new Node);
       container.type = NodeType::t_module;
+      container.context = nullptr;
       container.module.data = new std::vector<Node*>;
       container.module.has_errors = false;
 
@@ -135,12 +137,17 @@ namespace akbit::system::parsing
 
       Node &container = *(new Node);
       container.type = NodeType::t_declaration;
+      container.context = nullptr;
+      container.declaration.name = nullptr;
+      container.declaration.type = nullptr;
+      container.declaration.value = nullptr;
 
       auto idt = state.consume(TokenType::t_identifier);
       if (state.is_failed()) return &container;
       container.declaration.name = new std::string(idt.value);
       auto unode = new Node;
       unode->type = NodeType::t_unknown;
+      unode->context = nullptr;
       auto data = parse_expression(unode, state, 2);
       if (data != unode)
       {
@@ -268,6 +275,7 @@ namespace akbit::system::parsing
       {
         auto &container = *(new Node);
         container.type = NodeType::t_function_call;
+        container.context = nullptr;
         container.call.expression = unit;
         container.call.arguments = convert_to_tuple(parse_unit(state));
         unit = &container;
@@ -285,6 +293,7 @@ namespace akbit::system::parsing
         {
           Node &container = *(new Node);
           container.type = NodeType::t_value;
+          container.context = nullptr;
           container.value.type = NodeValueType::t_tuple;
           container.value.as_tuple.entries = new std::vector<Node*>();
           state.move();
@@ -302,6 +311,7 @@ namespace akbit::system::parsing
         state.move();
         Node &container = *(new Node);
         container.type = NodeType::t_block;
+        container.context = nullptr;
         container.block.code = new std::vector<Node*>();
         while (!state.is_eof() && !state.is_failed() && state.peek().sub_type != TokenSubType::t_brace_curly_right)
         {
@@ -316,6 +326,7 @@ namespace akbit::system::parsing
       {
         Node &container = *(new Node);
         container.type = NodeType::t_unary_operation;
+        container.context = nullptr;
         container.unary_operation.operation = &parse_operator(state);
         container.unary_operation.expression = parse_composite_unit(state);
         return &container;
@@ -329,6 +340,7 @@ namespace akbit::system::parsing
       Token tok;
       Node &container = *(new Node);
       container.type = NodeType::t_value;
+      container.context = nullptr;
 
       {
         state.save();
@@ -363,7 +375,8 @@ namespace akbit::system::parsing
         {
           state.drop();
           container.value.type = NodeValueType::t_variable;
-          container.value.as_variable = new std::string(tok.value);
+          container.value.as_variable.name = new std::string(tok.value);
+          container.value.as_variable.record = nullptr;
           return &container;
         }
         state.restore();

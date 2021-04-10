@@ -86,7 +86,9 @@ namespace akbit::system::annotation
 
     void cg_visit_declaration(Node *node, Context *ctx, bool reg_vars)
     {
-      ctx->declarations.push_back(node);
+      // Assumes that the assignee is a signle variable
+      // TODO: Enhance the code to support more assignment types
+      ctx->add(*node->declaration.name, node->declaration.type);
       cg_visit(node->declaration.type, ctx, reg_vars);
       cg_visit(node->declaration.value, ctx, reg_vars);
     }
@@ -152,9 +154,15 @@ namespace akbit::system::annotation
         cg_visit(entry, ctx, reg_vars);
     }
 
-    void cg_visit_value_variable([[maybe_unused]] Node *node, [[maybe_unused]] Context *ctx, [[maybe_unused]] bool reg_vars)
+    void cg_visit_value_variable(Node *node, Context *ctx, bool reg_vars)
     {
-      // TODO: Do something here as well
+      // Assumes that the first found instance is the correct one
+      // TODO: Enhance the type checking algorithm
+      auto possible_values = ctx->find(*node->value.as_variable.name);
+      node->value.as_variable.record = possible_values.empty() ? nullptr : possible_values[0];
+      if (!reg_vars) return;
+      if (!ctx->get(*node->value.as_variable.name).empty()) return;
+      node->value.as_variable.record = ctx->add(*node->value.as_variable.name, nullptr);
     }
 
     void cg_visit_value_string([[maybe_unused]] Node *node, [[maybe_unused]] Context *ctx, [[maybe_unused]] bool reg_vars) { }

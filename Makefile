@@ -32,10 +32,10 @@ obj/lexing.o: src/parsing/lexing.cpp src/parsing/lexing.hpp src/error_handling.h
 obj/parsing.o: src/parsing/parsing.cpp src/parsing/parsing.hpp src/node.hpp src/operators.hpp src/error_handling.hpp src/error.hpp obj
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-obj/context_generation.o: src/annotation/context_generation.cpp src/annotation.hpp src/node.hpp obj
+obj/context_generation.o: src/annotation/context_generation.cpp src/annotation.hpp src/context.hpp src/node.hpp obj
 	$(CXX) $(CFLAGS) -c $< -o $@
 
-obj/tree_preprocessing.o: src/annotation/tree_preprocessing.cpp src/annotation.hpp src/node.hpp obj
+obj/tree_preprocessing.o: src/annotation/tree_preprocessing.cpp src/annotation.hpp src/context.hpp src/node.hpp obj
 	$(CXX) $(CFLAGS) -c $< -o $@
 
 clean:

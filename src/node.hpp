@@ -114,13 +114,19 @@ namespace akbit::system
         union
         {
           // TODO: use special type
-          std::string *as_variable;
           std::string *as_string;
           std::uint32_t as_character;
           
           // TODO: use special type
           std::string *as_integer;
           std::string *as_decimal;
+
+
+          struct
+          {
+            std::string *name;
+            DeclarationRecord *record;
+          } as_variable;
 
           struct
           {
@@ -155,6 +161,7 @@ namespace akbit::system
   {
     Node *container = new Node;
     container->type = NodeType::t_binary_operation;
+    container->context = nullptr;
     container->binary_operation.operands = new std::vector<Node *>;
 
     container->binary_operation.operands->push_back(left);

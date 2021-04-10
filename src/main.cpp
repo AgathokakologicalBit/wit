@@ -69,10 +69,7 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
   }
 
   auto &node = *node_;
-  std::cout
-    << get_node_type_name(node.type)
-    << "(\x1b[33m0x" << std::setw(4) << std::setfill('0') << std::hex << node.context->id << "\x1b[39m)"
-    << ": ";
+  std::cout << get_node_type_name(node.type) << ": ";
 
   switch (node.type)
   {
@@ -133,7 +130,16 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
         } break;
         case nvt::t_variable:
         {
-          std::cout << *node.value.as_variable;
+          std::cout << *node.value.as_variable.name;
+          auto record = node.value.as_variable.record;
+          if (record != nullptr)
+          {
+            std::cout << "\x1b[33m(0x" << std::setw(4) << std::setfill('0') << std::hex << record->context->id << ")\x1b[39m";
+          }
+          else
+          {
+            std::cout << "\x1b[33m(" << "------" << ")\x1b[39m";
+          }
         } break;
         
         case nvt::t_tuple:
@@ -149,7 +155,9 @@ void dump_ast(akbit::system::Node *node_, std::uint32_t depth, std::uint64_t mas
         
         case nvt::t_function:
         {
-          std::cout << "\x1b[39m\x1b[44mFUNCTION\x1b[49m\n";
+          std::cout
+            << "\x1b[39m\x1b[44mFUNCTION\x1b[49m"
+            << "(\x1b[33m0x" << std::setw(4) << std::setfill('0') << std::hex << node.context->id << "\x1b[39m)\n";
           draw_p(depth, mask | (0ul << (depth + 0u)));
           std::cout << "parameters:";
           for (std::size_t i = 0; i < node.value.as_function.parameters->size(); ++i)
