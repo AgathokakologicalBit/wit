@@ -36,7 +36,8 @@ let fc_2 = f_3()()
 
 
 let main = () -> {
-  let something = -1
-  let other = 9999
+  let sub_fun = it -> it + 1
+  let something = -1, 2
+  let other = 999, 6
   {-(something - other)}
 }
