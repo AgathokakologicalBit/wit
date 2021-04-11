@@ -129,6 +129,7 @@ namespace akbit::system::annotation
     {
       tp_visit(node.expression);
       tp_visit(node.arguments);
+      node.arguments = parsing::convert_to_tuple(node.arguments);
     }
 
 

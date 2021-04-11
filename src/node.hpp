@@ -23,7 +23,7 @@ namespace akbit::system
   {
     enum struct etype_t
     {
-      unkown,
+      unknown,
 
       string,
       character,
@@ -36,7 +36,7 @@ namespace akbit::system
       any,
     };
 
-    struct unkown_t { };
+    struct unknown_t { };
 
     struct module_t
     {
@@ -118,7 +118,7 @@ namespace akbit::system
 
 public:
     using node_variant_t = std::variant<
-      unkown_t,
+      unknown_t,
 
       module_t,
       declaration_t,
@@ -151,7 +151,7 @@ public:
     Node(T&& value)
       : context{}
       , value(value)
-      , result_type(etype_t::unkown)
+      , result_type(etype_t::unknown)
     {}
 
     Node(Node&&) = default;
@@ -163,6 +163,23 @@ public:
     Node& operator =(Node&) = default;
   };
 
+
+  inline std::string etype_to_str(Node::etype_t t)
+  {
+    switch (t)
+    {
+      case Node::etype_t::unknown: return "unknown";
+      case Node::etype_t::string: return "string";
+      case Node::etype_t::character: return "character";
+      case Node::etype_t::integer: return "integer";
+      case Node::etype_t::decimal: return "decimal";
+
+      case Node::etype_t::function: return "function";
+      case Node::etype_t::tuple: return "tuple";
+
+      case Node::etype_t::any: return "any";
+    } 
+  }
 
   inline std::shared_ptr<Node> make_node_bop(std::shared_ptr<Node> left, std::shared_ptr<Node> right, operator_t const * operation)
   {

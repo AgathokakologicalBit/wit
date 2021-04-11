@@ -19,12 +19,14 @@ namespace akbit::system
 
   struct operator_t
   {
-    uint32_t precedence;
+    std::uint8_t id;
+    std::uint32_t precedence;
     Associativity associativity;
     std::string representation;
 
-    operator_t(std::string representation_, uint32_t precedence_, Associativity associativity_)
-      : precedence(precedence_)
+    operator_t(std::uint8_t id, std::string representation_, uint32_t precedence_, Associativity associativity_)
+      : id(id)
+      , precedence(precedence_)
       , associativity(associativity_)
       , representation(representation_)
     { }

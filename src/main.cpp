@@ -15,6 +15,8 @@
 #include "annotation.hpp"
 #include "node.hpp"
 #include "context.hpp"
+#include "code_generation/generation.hpp"
+#include "code_generation/generators/javascript/generator.hpp"
 
 
 namespace
@@ -212,15 +214,11 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
 
   std::cout << '\n';
   draw_p(depth, mask | (1u << depth));
-  std::cout << "result_type: " << (int)node.result_type;
+  std::cout << "result_type: " << akbit::system::etype_to_str(node.result_type);
 }
 
 int main(int argc, char* argv[])
 {
-  // std::string source{}, line;
-  // while (getline(std::cin, line))
-  //   source += line + '\n';
-
   if (argc != 2)
   {
     char const *name = (argc > 0 ? argv[0] : "witcc");
@@ -251,7 +249,15 @@ int main(int argc, char* argv[])
   dump_ast(ast, -1u, 0ul);
   std::cout << "\n\x1b[39mResult: "
     << (std::get<akbit::system::Node::module_t>(ast->value).has_errors ? "\x1b[01;41mFAILURE" : "\x1b[01;44mSUCCESS")
-    << "\x1b[49m" << std::endl;
-    
+    << "\x1b[49m\x1b[00;39m" << std::endl;
+  
+  std::fstream js_output_file;
+	js_output_file.open("program.out.js", std::ios::out);
+  if (js_output_file)
+  {
+    js_output_file << akbit::system::code_generation::generate(ast, akbit::system::code_generation::GenerationTarget::Javascript, nullptr);
+    js_output_file.close();
+  }
+
   return EXIT_SUCCESS;
 }

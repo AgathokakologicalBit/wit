@@ -39,5 +39,8 @@ let main = () -> {
   let sub_fun = it -> it + 1
   let something = -1, 2
   let other = 999, 6
-  {-(something - other)}
+  print(sub_fun(cx_0))
+  print({-(something - other)})
 }
+
+main()

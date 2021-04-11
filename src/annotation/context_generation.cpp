@@ -74,16 +74,16 @@ namespace akbit::system::annotation
       // Assumes that the assignee is a signle variable
       // TODO: Enhance the code to support more assignment types
       cg_visit(val.type, ctx, reg_vars);
-      auto t = val.type ? val.type->result_type : Node::etype_t::unkown;
+      auto t = val.type ? val.type->result_type : Node::etype_t::unknown;
       cg_visit(val.value, ctx, reg_vars);
-      auto rt = t != Node::etype_t::unkown ? t : val.value->result_type;
+      auto rt = t != Node::etype_t::unknown ? t : val.value->result_type;
       ctx->add(ctx, val.name, rt);
       node->result_type = rt;
     }
 
     void cg_visit_block(std::shared_ptr<Node>, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
-      auto rt = Node::etype_t::unkown;
+      auto rt = Node::etype_t::unknown;
       for (auto stmt : val.code)
       {
         cg_visit(stmt, ctx, reg_vars);
@@ -100,7 +100,7 @@ namespace akbit::system::annotation
     void cg_visit_binary_operation(std::shared_ptr<Node> node, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       bool is_first = true;
-      auto common_type = Node::etype_t::unkown;
+      auto common_type = Node::etype_t::unknown;
 
       for (auto operand : val.operands)
       {
@@ -109,7 +109,7 @@ namespace akbit::system::annotation
         else
         {
           auto rt = operand->result_type;
-          if (common_type != rt && rt != Node::etype_t::unkown && rt != Node::etype_t::any)
+          if (common_type != rt && rt != Node::etype_t::unknown && rt != Node::etype_t::any)
           {
             // TODO: Report error
             std::cerr << "Binary operation type mismatch:\n  Expected <" << (int)common_type << ">, but <" << (int)rt << "> was given.";

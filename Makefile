@@ -1,12 +1,12 @@
 CXX = clang++
 CPP_VERSION = c++20
-CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -g
+CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -Werror-return-type -g
 
 .PHONY: clean witcc
 .DEFAULT: witcc
 
 
-witcc: obj/main.o obj/error_handling.o obj/operators.o obj/token.o obj/lexing.o obj/parsing.o obj/tree_preprocessing.o obj/context_generation.o
+witcc: obj/main.o obj/error_handling.o obj/operators.o obj/token.o obj/lexing.o obj/parsing.o obj/tree_preprocessing.o obj/context_generation.o obj/code_generation.o obj/code_generation_js.o
 	$(CXX) $(CFLAGS) -o $@ $?
 
 
@@ -37,6 +37,13 @@ obj/context_generation.o: src/annotation/context_generation.cpp src/annotation.h
 
 obj/tree_preprocessing.o: src/annotation/tree_preprocessing.cpp src/annotation.hpp src/context.hpp src/node.hpp obj
 	$(CXX) $(CFLAGS) -c $< -o $@
+
+obj/code_generation.o: src/code_generation/generation.cpp src/code_generation/generation.hpp src/node.hpp obj
+	$(CXX) $(CFLAGS) -c $< -o $@
+
+obj/code_generation_js.o: src/code_generation/generators/javascript/generator.cpp src/code_generation/generators/javascript/bootstrap.js src/code_generation/generators/javascript/generator.hpp src/code_generation/generation.hpp src/node.hpp obj
+	$(CXX) $(CFLAGS) -c $< -o $@
+
 
 clean:
 	rm -f ./obj/*

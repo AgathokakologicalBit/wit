@@ -100,6 +100,7 @@ namespace akbit::system::parsing
         {node}
       }
     });
+
     return container;
   }
 
@@ -260,7 +261,7 @@ namespace akbit::system::parsing
       {
         auto container = std::make_shared<Node>(Node::function_call_t{
           .expression = unit,
-          .arguments = convert_to_tuple(parse_unit(state))
+          .arguments = parse_unit(state)
         });
         unit = container;
       }
