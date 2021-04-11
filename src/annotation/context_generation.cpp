@@ -1,4 +1,8 @@
+#include <iostream>
+
 #include "../annotation.hpp"
+#include "../node.hpp"
+#include "../context.hpp"
 
 
 namespace akbit::system::annotation
@@ -65,44 +69,71 @@ namespace akbit::system::annotation
         cg_visit(d, ctx, reg_vars);
     }
 
-    void cg_visit_declaration(std::shared_ptr<Node>, Node::declaration_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_declaration(std::shared_ptr<Node> node, Node::declaration_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       // Assumes that the assignee is a signle variable
       // TODO: Enhance the code to support more assignment types
-      ctx->add(ctx, val.name, val.type);
       cg_visit(val.type, ctx, reg_vars);
+      auto t = val.type ? val.type->result_type : Node::etype_t::unkown;
       cg_visit(val.value, ctx, reg_vars);
+      auto rt = t != Node::etype_t::unkown ? t : val.value->result_type;
+      ctx->add(ctx, val.name, rt);
+      node->result_type = rt;
     }
 
     void cg_visit_block(std::shared_ptr<Node>, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
+      auto rt = Node::etype_t::unkown;
       for (auto stmt : val.code)
-        cg_visit(stmt, ctx, reg_vars);
-    }
-
-    void cg_visit_unary_operation(std::shared_ptr<Node>, Node::unary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
-    {
-      cg_visit(val.expression, ctx, reg_vars);
-    }
-
-    void cg_visit_binary_operation(std::shared_ptr<Node>, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
-    {
-      bool is_first = true;
-      for (auto operand : val.operands)
       {
-        cg_visit(operand, ctx, reg_vars && (val.operation != find_operator(":") || is_first));
-        is_first = false;
+        cg_visit(stmt, ctx, reg_vars);
+        rt = stmt->result_type;
       }
     }
 
-    void cg_visit_function_call(std::shared_ptr<Node>, Node::function_call_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_unary_operation(std::shared_ptr<Node> node, Node::unary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    {
+      cg_visit(val.expression, ctx, reg_vars);
+      node->result_type = val.expression->result_type;
+    }
+
+    void cg_visit_binary_operation(std::shared_ptr<Node> node, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    {
+      bool is_first = true;
+      auto common_type = Node::etype_t::unkown;
+
+      for (auto operand : val.operands)
+      {
+        cg_visit(operand, ctx, reg_vars && (val.operation != find_operator(":") || is_first));
+        if (is_first) common_type = operand->result_type;
+        else
+        {
+          auto rt = operand->result_type;
+          if (common_type != rt && rt != Node::etype_t::unkown && rt != Node::etype_t::any)
+          {
+            // TODO: Report error
+            std::cerr << "Binary operation type mismatch:\n  Expected <" << (int)common_type << ">, but <" << (int)rt << "> was given.";
+            common_type = Node::etype_t::any;
+          }
+        }
+        
+        is_first = false;
+      }
+
+      node->result_type = common_type;
+    }
+
+    void cg_visit_function_call(std::shared_ptr<Node> node, Node::function_call_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       cg_visit(val.expression, ctx, reg_vars);
       cg_visit(val.arguments, ctx, reg_vars);
+      node->result_type = Node::etype_t::any;
     }
 
-    void cg_visit_value_function(std::shared_ptr<Node>, Node::value_function_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_function(std::shared_ptr<Node> node, Node::value_function_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
+      // TODO: Determine body return type
+      node->result_type = Node::etype_t::function;
       auto sub_context = std::make_shared<Context>(ctx);
       val.owned_context = sub_context;
       for (auto param : val.parameters)
@@ -110,26 +141,35 @@ namespace akbit::system::annotation
       cg_visit(val.body, sub_context, reg_vars);
     }
 
-    void cg_visit_value_tuple(std::shared_ptr<Node>, Node::value_tuple_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_tuple(std::shared_ptr<Node> node, Node::value_tuple_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
+      node->result_type = Node::etype_t::tuple;
       for (auto entry : val.entries)
         cg_visit(entry, ctx, reg_vars);
     }
     
-    void cg_visit_value_variable(std::shared_ptr<Node>, Node::value_variable_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_variable(std::shared_ptr<Node> node, Node::value_variable_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       // Assumes that the first found instance is the correct one
       // TODO: Enhance the type checking algorithm
       auto possible_values = ctx->find(val.name);
       val.record = possible_values.empty() ? nullptr : possible_values[0];
+      if (val.record.lock()) node->result_type = val.record.lock()->type;
       if (!reg_vars) return;
       if (!ctx->get(val.name).empty()) return;
-      val.record = ctx->add(ctx, val.name, nullptr);
+      val.record = ctx->add(ctx, val.name, node->result_type);
     }
 
-    void cg_visit_value_string(std::shared_ptr<Node>, Node::value_string_t&, std::shared_ptr<Context>, bool) { }
-    void cg_visit_value_character(std::shared_ptr<Node>, Node::value_character_t&, std::shared_ptr<Context>, bool) { }
-    void cg_visit_value_integer(std::shared_ptr<Node>, Node::value_integer_t&, std::shared_ptr<Context>, bool) { }
-    void cg_visit_value_decimal(std::shared_ptr<Node>, Node::value_decimal_t&, std::shared_ptr<Context>, bool) { }
+    void cg_visit_value_string(std::shared_ptr<Node> node, Node::value_string_t&, std::shared_ptr<Context>, bool)
+    { node->result_type = Node::etype_t::string; }
+    
+    void cg_visit_value_character(std::shared_ptr<Node> node, Node::value_character_t&, std::shared_ptr<Context>, bool)
+    { node->result_type = Node::etype_t::character; }
+
+    void cg_visit_value_integer(std::shared_ptr<Node> node, Node::value_integer_t&, std::shared_ptr<Context>, bool)
+    { node->result_type = Node::etype_t::integer; }
+    
+    void cg_visit_value_decimal(std::shared_ptr<Node> node, Node::value_decimal_t&, std::shared_ptr<Context>, bool)
+    { node->result_type = Node::etype_t::decimal; }
   }
 }

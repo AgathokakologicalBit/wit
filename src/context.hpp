@@ -9,6 +9,8 @@
 #include <memory>
 #include <vector>
 
+#include "node.hpp"
+
 
 namespace akbit::system
 {
@@ -19,7 +21,8 @@ namespace akbit::system
   {
     std::weak_ptr<Context> context;
     std::string name;
-    std::shared_ptr<Node> type;
+    // TODO: Use dedicated type class instead
+    Node::etype_t type;
   };
 
   struct Context
@@ -44,7 +47,7 @@ namespace akbit::system
     { }
 
   public:
-    std::shared_ptr<DeclarationRecord> add(std::shared_ptr<Context> self, std::string& name, std::shared_ptr<Node> type)
+    std::shared_ptr<DeclarationRecord> add(std::shared_ptr<Context> self, std::string& name, Node::etype_t type)
     {
       return this->declarations.emplace_back(new DeclarationRecord{self, name, type});
     }

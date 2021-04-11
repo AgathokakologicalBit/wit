@@ -1,7 +1,6 @@
 #include <memory>
 #include <type_traits>
 #include <variant>
-#include <string.h>
 
 
 #include "../annotation.hpp"

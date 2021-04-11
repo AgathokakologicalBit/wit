@@ -12,13 +12,30 @@
 #include <memory>
 
 #include "operators.hpp"
-#include "context.hpp"
 
 
 namespace akbit::system
 {
+  struct Context;
+  struct DeclarationRecord;
+
   struct Node
   {
+    enum struct etype_t
+    {
+      unkown,
+
+      string,
+      character,
+      integer,
+      decimal,
+
+      function,
+      tuple,
+
+      any,
+    };
+
     struct unkown_t { };
 
     struct module_t
@@ -124,6 +141,7 @@ public:
   public:
     std::weak_ptr<Context> context;
     node_variant_t value;
+    etype_t result_type;
 
 
   public:
@@ -133,6 +151,7 @@ public:
     Node(T&& value)
       : context{}
       , value(value)
+      , result_type(etype_t::unkown)
     {}
 
     Node(Node&&) = default;

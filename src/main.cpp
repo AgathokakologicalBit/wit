@@ -13,6 +13,8 @@
 #include "parsing/lexing.hpp"
 #include "parsing/parsing.hpp"
 #include "annotation.hpp"
+#include "node.hpp"
+#include "context.hpp"
 
 
 namespace
@@ -88,8 +90,8 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
     [&](Node::module_t           &node) {
       for (std::size_t i = 0; i < node.data.size(); ++i)
       {
-        if (i == node.data.size() - 1)
-          mask |= 1ul << 0u;
+        // if (i == node.data.size() - 1)
+        //   mask |= 1ul << 0u;
         dump_ast(node.data[i], depth, mask);
       }
     },
@@ -105,9 +107,9 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       draw_p(depth, mask );
       std::cout << "type: ";
       std::cout << "\x1b[97m";
-      dump_ast(node.type, depth + 1u, mask | (1ul << (depth + 1u)));
+      dump_ast(node.type, depth + 1u, mask | (0ul << (depth + 1u)));
 
-      mask |= static_cast<std::uint64_t>(1) << depth;
+      // mask |= static_cast<std::uint64_t>(1) << depth;
 
       dump_ast(node.value, depth, mask);
     },
@@ -115,8 +117,8 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
     [&](Node::block_t            &node) {
       for (std::size_t i = 0; i < node.code.size(); ++i)
       {
-        if (i == node.code.size() - 1)
-          mask |= static_cast<std::uint64_t>(1) << depth;
+        // if (i == node.code.size() - 1)
+        //   mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast(node.code[i], depth, mask);
       }
     },
@@ -141,8 +143,8 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
 
       for (std::size_t i = 0; i < node.operands.size(); ++i)
       {
-        if (i == node.operands.size() - 1)
-          mask |= static_cast<std::uint64_t>(1) << depth;
+        // if (i == node.operands.size() - 1)
+        //   mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast(node.operands[i], depth, mask);
       }
     },
@@ -152,10 +154,10 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       draw_p(depth, mask);
       std::cout << "expression: ";
 
-      mask |= static_cast<std::uint64_t>(1) << (depth + 1);
+      // mask |= static_cast<std::uint64_t>(1) << (depth + 1);
       dump_ast(node.expression, depth + 1u, mask);
 
-      mask |= static_cast<std::uint64_t>(1) << depth;
+      // mask |= static_cast<std::uint64_t>(1) << depth;
 
       std::cout << '\n';
       draw_p(depth, mask);
@@ -172,8 +174,8 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       for (std::size_t i = 0; i < node.parameters.size(); ++i)
       {
         auto sub_mask = mask;
-        if (i == node.parameters.size() - 1ul)
-          sub_mask |= static_cast<std::uint64_t>(1) << (depth + 1u);
+        // if (i == node.parameters.size() - 1ul)
+        //   sub_mask |= static_cast<std::uint64_t>(1) << (depth + 1u);
         dump_ast(node.parameters[i], depth + 1, sub_mask);
       }
 
@@ -183,8 +185,8 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       std::cout << "\x1b[39m\x1b[44mTUPLE\x1b[49m";
       for (std::size_t i = 0; i < node.entries.size(); ++i)
       {
-        if (i == node.entries.size() - 1)
-          mask |= static_cast<std::uint64_t>(1) << depth;
+        // if (i == node.entries.size() - 1)
+        //   mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast(node.entries[i], depth, mask);
       }
     },
@@ -208,18 +210,9 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
     [&](Node::value_decimal_t    &node) { std::cout << node.value; },
   }, node.value);
 
-  // switch (node.type)
-  // {
-  //   case nt::t_value:
-  //   {
-  //     std::wcout << L"\x1b[95m";
-  //     switch (node.value.type)
-  //     {        
-
-  //       } break;
-  //     }
-  //   } break;
-  // }
+  std::cout << '\n';
+  draw_p(depth, mask | (1u << depth));
+  std::cout << "result_type: " << (int)node.result_type;
 }
 
 int main(int argc, char* argv[])
