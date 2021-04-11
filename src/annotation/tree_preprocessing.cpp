@@ -48,12 +48,12 @@ namespace akbit::system::annotation
     {
       if (nullptr == node) return;
       std::visit(overloaded {
-        [](auto                     &_) {                                  },
+        [](auto                     & ) {                                  },
         [](Node::module_t           &_) { tp_visit_module(_);              },
         [](Node::declaration_t      &_) { tp_visit_declaration(_);         },
         [](Node::block_t            &_) { tp_visit_block(_);               },
         [](Node::unary_operation_t  &_) { tp_visit_unary_operation(_);     },
-        [&](Node::binary_operation_t &_) { tp_visit_binary_operation(node); },
+        [&](Node::binary_operation_t& ) { tp_visit_binary_operation(node); },
         [](Node::function_call_t    &_) { tp_visit_function_call(_);       },
         [](Node::value_function_t   &_) { tp_visit_value_function(_);      },
         [](Node::value_tuple_t      &_) { tp_visit_value_tuple(_);         },
@@ -146,10 +146,10 @@ namespace akbit::system::annotation
         tp_visit(entry);
     }
 
-    void tp_visit_value_variable([[maybe_unused]] Node::value_variable_t& node) { }
-    void tp_visit_value_string([[maybe_unused]] Node::value_string_t& node) { }
-    void tp_visit_value_character([[maybe_unused]] Node::value_character_t& node) { }
-    void tp_visit_value_integer([[maybe_unused]] Node::value_integer_t& node) { }
-    void tp_visit_value_decimal([[maybe_unused]] Node::value_decimal_t& node) { }
+    void tp_visit_value_variable(Node::value_variable_t&) { }
+    void tp_visit_value_string(Node::value_string_t&) { }
+    void tp_visit_value_character(Node::value_character_t&) { }
+    void tp_visit_value_integer(Node::value_integer_t&) { }
+    void tp_visit_value_decimal(Node::value_decimal_t&) { }
   }
 }

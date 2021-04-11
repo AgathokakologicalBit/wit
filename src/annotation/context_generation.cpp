@@ -41,7 +41,7 @@ namespace akbit::system::annotation
 
       node->context = ctx;
       std::visit(overloaded {
-        [&](auto                     &_) {                                                       },
+        [&](auto                     & ) {                                                       },
         [&](Node::module_t           &_) { cg_visit_module(node, _, ctx, reg_vars);              },
         [&](Node::declaration_t      &_) { cg_visit_declaration(node, _, ctx, reg_vars);         },
         [&](Node::block_t            &_) { cg_visit_block(node, _, ctx, reg_vars);               },
@@ -58,14 +58,14 @@ namespace akbit::system::annotation
       }, node->value);
     }
 
-    void cg_visit_module(std::shared_ptr<Node> node, Node::module_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_module(std::shared_ptr<Node>, Node::module_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       val.global_context = ctx;
       for (auto d : val.data)
         cg_visit(d, ctx, reg_vars);
     }
 
-    void cg_visit_declaration(std::shared_ptr<Node> node, Node::declaration_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_declaration(std::shared_ptr<Node>, Node::declaration_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       // Assumes that the assignee is a signle variable
       // TODO: Enhance the code to support more assignment types
@@ -74,18 +74,18 @@ namespace akbit::system::annotation
       cg_visit(val.value, ctx, reg_vars);
     }
 
-    void cg_visit_block(std::shared_ptr<Node> node, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_block(std::shared_ptr<Node>, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       for (auto stmt : val.code)
         cg_visit(stmt, ctx, reg_vars);
     }
 
-    void cg_visit_unary_operation(std::shared_ptr<Node> node, Node::unary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_unary_operation(std::shared_ptr<Node>, Node::unary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       cg_visit(val.expression, ctx, reg_vars);
     }
 
-    void cg_visit_binary_operation(std::shared_ptr<Node> node, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_binary_operation(std::shared_ptr<Node>, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       bool is_first = true;
       for (auto operand : val.operands)
@@ -95,13 +95,13 @@ namespace akbit::system::annotation
       }
     }
 
-    void cg_visit_function_call(std::shared_ptr<Node> node, Node::function_call_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_function_call(std::shared_ptr<Node>, Node::function_call_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       cg_visit(val.expression, ctx, reg_vars);
       cg_visit(val.arguments, ctx, reg_vars);
     }
 
-    void cg_visit_value_function(std::shared_ptr<Node> node, Node::value_function_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_function(std::shared_ptr<Node>, Node::value_function_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       auto sub_context = std::make_shared<Context>(ctx);
       val.owned_context = sub_context;
@@ -110,13 +110,13 @@ namespace akbit::system::annotation
       cg_visit(val.body, sub_context, reg_vars);
     }
 
-    void cg_visit_value_tuple(std::shared_ptr<Node> node, Node::value_tuple_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_tuple(std::shared_ptr<Node>, Node::value_tuple_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       for (auto entry : val.entries)
         cg_visit(entry, ctx, reg_vars);
     }
     
-    void cg_visit_value_variable(std::shared_ptr<Node> node, Node::value_variable_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    void cg_visit_value_variable(std::shared_ptr<Node>, Node::value_variable_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
     {
       // Assumes that the first found instance is the correct one
       // TODO: Enhance the type checking algorithm
@@ -127,9 +127,9 @@ namespace akbit::system::annotation
       val.record = ctx->add(ctx, val.name, nullptr);
     }
 
-    void cg_visit_value_string([[maybe_unused]] std::shared_ptr<Node> node, [[maybe_unused]] Node::value_string_t &val, [[maybe_unused]] std::shared_ptr<Context> ctx, [[maybe_unused]] bool reg_vars) { }
-    void cg_visit_value_character([[maybe_unused]] std::shared_ptr<Node> node, [[maybe_unused]] Node::value_character_t &val, [[maybe_unused]] std::shared_ptr<Context> ctx, [[maybe_unused]] bool reg_vars) { }
-    void cg_visit_value_integer([[maybe_unused]] std::shared_ptr<Node> node, [[maybe_unused]] Node::value_integer_t &val, [[maybe_unused]] std::shared_ptr<Context> ctx, [[maybe_unused]] bool reg_vars) { }
-    void cg_visit_value_decimal([[maybe_unused]] std::shared_ptr<Node> node, [[maybe_unused]] Node::value_decimal_t &val, [[maybe_unused]] std::shared_ptr<Context> ctx, [[maybe_unused]] bool reg_vars) { }
+    void cg_visit_value_string(std::shared_ptr<Node>, Node::value_string_t&, std::shared_ptr<Context>, bool) { }
+    void cg_visit_value_character(std::shared_ptr<Node>, Node::value_character_t&, std::shared_ptr<Context>, bool) { }
+    void cg_visit_value_integer(std::shared_ptr<Node>, Node::value_integer_t&, std::shared_ptr<Context>, bool) { }
+    void cg_visit_value_decimal(std::shared_ptr<Node>, Node::value_decimal_t&, std::shared_ptr<Context>, bool) { }
   }
 }

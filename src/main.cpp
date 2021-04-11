@@ -25,20 +25,20 @@ namespace
   {
     using sn = akbit::system::Node;
     return std::visit(overloaded {
-      [](auto                  &_) -> std::string { return "#???";             },
-      [](sn::module_t           _) -> std::string { return "module";           },
-      [](sn::declaration_t      _) -> std::string { return "declaration";      },
-      [](sn::binary_operation_t _) -> std::string { return "operation-binary"; },
-      [](sn::unary_operation_t  _) -> std::string { return "operation-unary";  },
-      [](sn::function_call_t    _) -> std::string { return "call";             },
-      [](sn::block_t            _) -> std::string { return "block";            },
-      [](sn::value_function_t   _) -> std::string { return "function";         },
-      [](sn::value_tuple_t      _) -> std::string { return "tuple";            },
-      [](sn::value_variable_t   _) -> std::string { return "variable";         },
-      [](sn::value_string_t     _) -> std::string { return "string";           },
-      [](sn::value_character_t  _) -> std::string { return "character";        },
-      [](sn::value_integer_t    _) -> std::string { return "integer";          },
-      [](sn::value_decimal_t    _) -> std::string { return "decimal";          },
+      [](auto                  &) -> std::string { return "#???";             },
+      [](sn::module_t           ) -> std::string { return "module";           },
+      [](sn::declaration_t      ) -> std::string { return "declaration";      },
+      [](sn::binary_operation_t ) -> std::string { return "operation-binary"; },
+      [](sn::unary_operation_t  ) -> std::string { return "operation-unary";  },
+      [](sn::function_call_t    ) -> std::string { return "call";             },
+      [](sn::block_t            ) -> std::string { return "block";            },
+      [](sn::value_function_t   ) -> std::string { return "function";         },
+      [](sn::value_tuple_t      ) -> std::string { return "tuple";            },
+      [](sn::value_variable_t   ) -> std::string { return "variable";         },
+      [](sn::value_string_t     ) -> std::string { return "string";           },
+      [](sn::value_character_t  ) -> std::string { return "character";        },
+      [](sn::value_integer_t    ) -> std::string { return "integer";          },
+      [](sn::value_decimal_t    ) -> std::string { return "decimal";          },
     }, node.value);
   }
 
@@ -83,7 +83,7 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
   std::cout << get_node_type_name(node) << ": ";
 
   std::visit(overloaded {
-    [&](auto                     &node) { std::cout << "\x1b[44mUNKNOWN*\x1b[49m"; },
+    [&](auto&) { std::cout << "\x1b[44mUNKNOWN*\x1b[49m"; },
     
     [&](Node::module_t           &node) {
       for (std::size_t i = 0; i < node.data.size(); ++i)

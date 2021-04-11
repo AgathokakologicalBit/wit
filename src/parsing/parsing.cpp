@@ -59,7 +59,6 @@ namespace akbit::system::parsing
     std::shared_ptr<Node> parse_value(ParserState &state);
     std::shared_ptr<Node> parse_unit(ParserState &state);
     std::shared_ptr<Node> parse_composite_unit(ParserState &state);
-    std::shared_ptr<Node> parse_type(ParserState &state);
 
     // Node * parse_function_declaration(ParserState &state);
 
@@ -374,13 +373,6 @@ namespace akbit::system::parsing
       }
       
       return container;
-    }
-
-    std::shared_ptr<Node> parse_type(ParserState &state)
-    {
-      state.error.code = error_t::e_fatal_internal_error;
-      state.error.message = "Function 'parse_type' is not implemented";
-      return nullptr;
     }
 
     operator_t const & parse_operator(ParserState &state)
