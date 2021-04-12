@@ -219,7 +219,7 @@ namespace akbit::system::parsing
       if (state.is_failed())
         return left_operand;
 
-      return parse_statement(left_operand, state, 0);
+      return parse_expression(left_operand, state, 0);
     }
 
     std::shared_ptr<Node> parse_expression(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority)
