@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "parsing.hpp"
 
 
@@ -164,7 +166,9 @@ namespace akbit::system::parsing
       auto idt = state.consume(TokenType::t_identifier);
       if (state.is_failed()) return container;
 
-      std::get<Node::declaration_t>(container->value).name = idt.value;
+      std::get<Node::declaration_t>(container->value).variable = std::make_shared<Node>(Node(Node::value_variable_t{
+        .name = idt.value,
+      }));
       auto unode = std::make_shared<Node>();
       auto data = parse_expression(unode, state, 2);
       if (data != unode)
@@ -274,7 +278,7 @@ namespace akbit::system::parsing
 
           operation = next_operation;
 
-          right_operand = parse_composite_unit(state);
+          right_operand = parse_statement_or_composite_unit(state);
           if (state.is_failed())
             return left_operand;
 

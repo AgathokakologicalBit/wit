@@ -48,7 +48,7 @@ namespace akbit::system
 
     struct declaration_t
     {
-      std::string name;
+      std::shared_ptr<Node> variable;
       std::shared_ptr<Node> type;
       std::shared_ptr<Node> value;
     };

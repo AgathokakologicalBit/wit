@@ -75,12 +75,34 @@ namespace akbit::system::annotation
     {
       // Assumes that the assignee is a signle variable
       // TODO: Enhance the code to support more assignment types
-      cg_visit(val.type, ctx, reg_vars);
-      auto t = val.type ? val.type->result_type : Node::etype_t::unknown;
-      auto record = ctx->add(ctx, val.name, t);
+      // TODO: Make a normal type checking
+      cg_visit(val.type, ctx, false);
+      auto t = Node::etype_t::unknown;
+      if (val.type && val.type->value.index() == 12)
+      {
+        auto type_info = std::get<Node::value_variable_t>(val.type->value);
+        if (!type_info.record.lock())
+        {
+          if (type_info.name == "int") t = Node::etype_t::integer;
+          else if (type_info.name == "float") t = Node::etype_t::decimal;
+          else if (type_info.name == "string") t = Node::etype_t::string;
+          else if (type_info.name == "function") t = Node::etype_t::function;
+        }
+      }
+
+      auto record = ctx->add(ctx, std::get<Node::value_variable_t>(val.variable->value).name, t);
       node->result_type = t;
+      std::get<Node::value_variable_t>(val.variable->value).record = record;
+
+      if (!val.value) return;
       cg_visit(val.value, ctx, reg_vars);
       auto rt = t != Node::etype_t::unknown ? t : val.value->result_type;
+      if (t != Node::etype_t::unknown && rt != t)
+      {
+        // TODO: Handle error properly
+        std::cerr << "Mismatch between declared and assigned value types.\n";
+      }
+
       record->type = rt;
       node->result_type = rt;
     }
@@ -127,7 +149,7 @@ namespace akbit::system::annotation
           if (common_type != rt && rt != Node::etype_t::unknown && rt != Node::etype_t::any)
           {
             // TODO: Report error
-            std::cerr << "Binary operation type mismatch:\n  Expected <" << (int)common_type << ">, but <" << (int)rt << "> was given.";
+            std::cerr << "Binary operation type mismatch:\n  Expected <" << (int)common_type << ">, but <" << (int)rt << "> was given.\n";
             common_type = Node::etype_t::any;
           }
         }

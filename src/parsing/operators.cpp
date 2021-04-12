@@ -39,7 +39,7 @@ namespace akbit::system
     operator_t(18, "->",    4, ASSOC_RIGHT),       // 18 - lambda function
     operator_t(19, "," ,    3, ASSOC_LEFT ),       // 19 - tupling
 
-    operator_t(20, ":" ,    2, ASSOC_LEFT ),       // 20 - type cast
+    operator_t(20, ":" ,    5, ASSOC_LEFT ),       // 20 - type cast
 
     operator_t(21, "=" ,    1, ASSOC_RIGHT),       // 21 - assignment
     // TODO: Add assignments with operations

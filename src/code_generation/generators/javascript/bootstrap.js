@@ -1,14 +1,25 @@
 // ##START_BOOSTRAP
-let s_print = console.log;
+const s_print = console.log;
+const readline = require('readline');
+const s_input = (_question, _callback) => {
+  let rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  rl.question(_question, result => {
+  _callback(result);
+  rl.close();
+  });
+};
 
 // type information
-let s_int = {
+const s_int = {
   'cast': v => v | 0
 }
-let s_float = {
+const s_float = {
   'cast': v => +v
 }
-let s_string = {
+const s_string = {
   'cast': v => new String(v)
 }
 
@@ -28,6 +39,6 @@ function so11(l, r) { return l <  r; }
 function so12(l, r) { return l == r; }
 function so13(l, r) { return l != r; }
 
-function so20(l,    t) { return t.cast(l); }
+function so20(l, t) { return t.cast(l); }
 
 // ##END_BOOSTRAP

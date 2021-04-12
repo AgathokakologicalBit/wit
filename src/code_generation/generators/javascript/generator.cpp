@@ -90,7 +90,7 @@ namespace akbit::system::code_generation::js
 
     std::string cg_visit_declaration(std::shared_ptr<Node>, Node::declaration_t &val, Settings s)
     {
-      return std::string(s.indent, ' ') + "let u" + val.name + " = " + cg_visit(val.value, s);
+      return std::string(s.indent, ' ') + "let u" + std::get<Node::value_variable_t>(val.variable->value).name + " = " + cg_visit(val.value, s);
     }
 
     std::string cg_visit_condition(std::shared_ptr<Node>, Node::condition_t &val, Settings s)
@@ -143,12 +143,14 @@ namespace akbit::system::code_generation::js
     std::string cg_visit_value_function(std::shared_ptr<Node>, Node::value_function_t &val, Settings s)
     {
       std::string res = "((";
+      
       for (auto& p : val.parameters)
       {
         if (&p != &val.parameters.front()) res += ", ";
-        res += cg_visit(p, s);
+        res += cg_visit(std::get<Node::declaration_t>(p->value).variable, s);
       }
       res += ") => " + cg_visit(val.body, s) + ")";
+
       return res;
     }
 

@@ -92,24 +92,20 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
     
     [&](Node::module_t           &node) {
       for (std::size_t i = 0; i < node.data.size(); ++i)
-      {
-        // if (i == node.data.size() - 1)
-        //   mask |= 1ul << 0u;
         dump_ast(node.data[i], depth, mask);
-      }
     },
 
     [&](Node::declaration_t      &node) {
       std::cout << '\n';
       draw_p(depth, mask);
-      std::cout << "name: ";
-      std::cout << "\x1b[97m";
-      std::cout << node.name;
+      std::cout << "variable: ";
+      // std::cout << "\x1b[97m";
+      dump_ast(node.variable, depth + 1u, mask);
 
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "type: ";
-      std::cout << "\x1b[97m";
+      // std::cout << "\x1b[97m";
       dump_ast(node.type, depth + 1u, mask);
 
       dump_ast(node.value, depth, mask);

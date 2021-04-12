@@ -97,6 +97,34 @@ namespace akbit::system::annotation
       tp_visit(node.expression);
     }
 
+    std::vector<std::shared_ptr<Node>> convert_to_declarations(std::vector<std::shared_ptr<Node>>& nodes)
+    {
+      // TODO: Handle errors
+      std::vector<std::shared_ptr<Node>> res;
+
+      for (auto&& n : nodes)
+      {
+        if (n->value.index() == 5)
+        {
+          res.push_back(std::make_shared<Node>(Node(Node::declaration_t{
+            .variable = std::get<Node::binary_operation_t>(n->value).operands[0],
+            .type = std::get<Node::binary_operation_t>(n->value).operands[1],
+            .value = nullptr
+          })));
+        }
+        else
+        {
+          res.push_back(std::make_shared<Node>(Node(Node::declaration_t{
+            .variable = n,
+            .type = nullptr,
+            .value = nullptr
+          })));
+        }
+      }
+
+      return res;
+    }
+
     void tp_visit_binary_operation(std::shared_ptr<Node> node_)
     {
       Node::binary_operation_t& node = std::get<Node::binary_operation_t>(node_->value);
@@ -113,7 +141,7 @@ namespace akbit::system::annotation
         {
           auto tmp_tuple = parsing::convert_to_tuple(node.operands[i]);
           auto nfn = std::make_shared<Node>(Node::value_function_t{
-            .parameters = std::get<Node::value_tuple_t>(tmp_tuple->value).entries,
+            .parameters = convert_to_declarations(std::get<Node::value_tuple_t>(tmp_tuple->value).entries),
           });
           std::get<Node::value_function_t>(nfn->value).body = function_node;
           function_node = nfn;
