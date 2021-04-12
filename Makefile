@@ -1,6 +1,6 @@
 CXX = clang++
 CPP_VERSION = c++20
-CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -Werror-return-type -g
+CFLAGS = -std=$(CPP_VERSION) -Wall -Wextra -pedantic-errors -Werror-return-type -g
 
 .PHONY: clean witcc
 .DEFAULT: witcc

@@ -17,6 +17,7 @@ namespace akbit::system::annotation
 
     void cg_visit_module(std::shared_ptr<Node> node, Node::module_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
     void cg_visit_declaration(std::shared_ptr<Node> node, Node::declaration_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
+    void cg_visit_condition(std::shared_ptr<Node> node, Node::condition_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
     void cg_visit_block(std::shared_ptr<Node> node, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
     void cg_visit_unary_operation(std::shared_ptr<Node> node, Node::unary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
     void cg_visit_binary_operation(std::shared_ptr<Node> node, Node::binary_operation_t &val, std::shared_ptr<Context> ctx, bool reg_vars);
@@ -48,6 +49,7 @@ namespace akbit::system::annotation
         [&](auto                     & ) {                                                       },
         [&](Node::module_t           &_) { cg_visit_module(node, _, ctx, reg_vars);              },
         [&](Node::declaration_t      &_) { cg_visit_declaration(node, _, ctx, reg_vars);         },
+        [&](Node::condition_t        &_) { cg_visit_condition(node, _, ctx, reg_vars);           },
         [&](Node::block_t            &_) { cg_visit_block(node, _, ctx, reg_vars);               },
         [&](Node::unary_operation_t  &_) { cg_visit_unary_operation(node, _, ctx, reg_vars);     },
         [&](Node::binary_operation_t &_) { cg_visit_binary_operation(node, _, ctx, reg_vars);    },
@@ -75,10 +77,23 @@ namespace akbit::system::annotation
       // TODO: Enhance the code to support more assignment types
       cg_visit(val.type, ctx, reg_vars);
       auto t = val.type ? val.type->result_type : Node::etype_t::unknown;
+      auto record = ctx->add(ctx, val.name, t);
+      node->result_type = t;
       cg_visit(val.value, ctx, reg_vars);
       auto rt = t != Node::etype_t::unknown ? t : val.value->result_type;
-      ctx->add(ctx, val.name, rt);
+      record->type = rt;
       node->result_type = rt;
+    }
+
+    void cg_visit_condition(std::shared_ptr<Node> node, Node::condition_t &val, std::shared_ptr<Context> ctx, bool reg_vars)
+    {
+      cg_visit(val.expression, ctx, reg_vars);
+      cg_visit(val.clause_true, ctx, reg_vars);
+      cg_visit(val.clause_false, ctx, reg_vars);
+
+      node->result_type = Node::etype_t::any;
+      if (val.clause_false && val.clause_false->result_type != val.clause_true->result_type)
+        node->result_type = val.clause_false->result_type;
     }
 
     void cg_visit_block(std::shared_ptr<Node>, Node::block_t &val, std::shared_ptr<Context> ctx, bool reg_vars)

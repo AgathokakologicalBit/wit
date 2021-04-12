@@ -56,18 +56,21 @@ namespace akbit::system::parsing
   {
     operator_t const & parse_operator(ParserState &state);
 
-    std::shared_ptr<Node> parse_value(ParserState &state);
-    std::shared_ptr<Node> parse_unit(ParserState &state);
-    std::shared_ptr<Node> parse_composite_unit(ParserState &state);
+    std::shared_ptr<Node> parse_module(ParserState &state);
 
     // Node * parse_function_declaration(ParserState &state);
 
     std::shared_ptr<Node> parse_expression(ParserState &state);
     std::shared_ptr<Node> parse_expression(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority);
 
-    std::shared_ptr<Node> parse_declaration(ParserState &state);
     std::shared_ptr<Node> parse_statement(ParserState &state);
-    std::shared_ptr<Node> parse_module(ParserState &state);
+
+    std::shared_ptr<Node> parse_statement_declaration(ParserState &state);
+    std::shared_ptr<Node> parse_statement_condition(ParserState &state);
+
+    std::shared_ptr<Node> parse_composite_unit(ParserState &state);
+    std::shared_ptr<Node> parse_unit(ParserState &state);
+    std::shared_ptr<Node> parse_value(ParserState &state);
   }
 
   std::shared_ptr<Node> parse(std::vector<Token> &tokens)
@@ -128,11 +131,31 @@ namespace akbit::system::parsing
     std::shared_ptr<Node> parse_statement(ParserState &state)
     {
       if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "let")
-        return parse_declaration(state);
+        return parse_statement_declaration(state);
+      else if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "if")
+        return parse_statement_condition(state);
       return parse_expression(state);
     }
 
-    std::shared_ptr<Node> parse_declaration(ParserState &state)
+    std::shared_ptr<Node> parse_statement(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority)
+    {
+      if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "let")
+        return parse_statement_declaration(state);
+      else if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "if")
+        return parse_statement_condition(state);
+      return parse_expression(left_operand, state, base_priority);
+    }
+
+    std::shared_ptr<Node> parse_statement_or_composite_unit(ParserState &state)
+    {
+      if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "let")
+        return parse_statement_declaration(state);
+      else if (state.peek().sub_type == TokenSubType::t_identifier && state.peek().value == "if")
+        return parse_statement_condition(state);
+      return parse_composite_unit(state);
+    }
+
+    std::shared_ptr<Node> parse_statement_declaration(ParserState &state)
     {
       state.consume(TokenSubType::t_identifier, "let");
       if (state.is_failed()) return nullptr;
@@ -146,7 +169,7 @@ namespace akbit::system::parsing
       auto data = parse_expression(unode, state, 2);
       if (data != unode)
       {
-        if (data->value.index() == 4 && std::get<Node::binary_operation_t>(data->value).operation == find_operator(":"))
+        if (data->value.index() == 5 && std::get<Node::binary_operation_t>(data->value).operation == find_operator(":"))
         {
           data = std::get<Node::binary_operation_t>(data->value).operands[1];
         }
@@ -160,7 +183,32 @@ namespace akbit::system::parsing
       state.consume(TokenSubType::t_equal);
       if (state.is_failed()) return container;
 
-      std::get<Node::declaration_t>(container->value).value = parse_expression(state);
+      std::get<Node::declaration_t>(container->value).value = parse_statement(state);
+      return container;
+    }
+
+    std::shared_ptr<Node> parse_statement_condition(ParserState &state)
+    {
+      state.consume(TokenSubType::t_identifier, "if");
+      if (state.is_failed()) return nullptr;
+      auto container = std::make_shared<Node>(Node::condition_t{});
+      auto &cc = std::get<Node::condition_t>(container->value);
+      cc.expression = parse_statement(state);
+      if (state.is_failed()) return container;
+      state.consume(TokenSubType::t_identifier, "then");
+      if (state.is_failed()) return container;
+      cc.clause_true = parse_statement(state);
+      if (state.is_failed()) return container;
+
+      state.save();
+      state.consume(TokenSubType::t_identifier, "else");
+      if (state.is_failed())
+      {
+        state.restore();
+        return container;
+      }
+      state.drop();
+      cc.clause_false = parse_statement(state);
       return container;
     }
 
@@ -171,7 +219,7 @@ namespace akbit::system::parsing
       if (state.is_failed())
         return left_operand;
 
-      return parse_expression(left_operand, state, 0);
+      return parse_statement(left_operand, state, 0);
     }
 
     std::shared_ptr<Node> parse_expression(std::shared_ptr<Node> left_operand, ParserState &state, uint32_t base_priority)
@@ -185,7 +233,7 @@ namespace akbit::system::parsing
       }
       state.drop();
 
-      std::shared_ptr<Node> right_operand = parse_composite_unit(state);
+      std::shared_ptr<Node> right_operand = parse_statement_or_composite_unit(state);
       if (state.is_failed())
         return left_operand;
 
@@ -202,7 +250,7 @@ namespace akbit::system::parsing
             // If the following operator has the higher priority
             // parse that subexpression first
             state.index -= next_operation->representation.size();
-            right_operand = parse_expression(right_operand, state, operation->precedence);
+            right_operand = parse_statement(right_operand, state, operation->precedence);
             if (state.is_failed())
               return left_operand;
 
@@ -215,7 +263,7 @@ namespace akbit::system::parsing
               break;
           }
 
-          if (left_operand->value.index() == 4 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
+          if (left_operand->value.index() == 5 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
           {
             std::get<Node::binary_operation_t>(left_operand->value).operands.push_back(right_operand);
           }
@@ -239,7 +287,7 @@ namespace akbit::system::parsing
       if (next_operation->precedence <= base_priority)
         state.index -= next_operation->representation.size();
 
-      if (left_operand->value.index() == 4 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
+      if (left_operand->value.index() == 5 && std::get<Node::binary_operation_t>(left_operand->value).operation == operation)
       {
         std::get<Node::binary_operation_t>(left_operand->value).operands.push_back(right_operand);
       }
@@ -283,7 +331,7 @@ namespace akbit::system::parsing
           return container;
         }
 
-        auto res = parse_expression(state);
+        auto res = parse_statement(state);
         if (not state.is_failed())
           state.consume(TokenSubType::t_brace_round_right);
         return res;

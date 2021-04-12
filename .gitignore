@@ -3,3 +3,4 @@
 obj/
 
 witcc
+*.out*

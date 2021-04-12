@@ -21,6 +21,7 @@ namespace akbit::system::annotation
 
     void tp_visit_module(Node::module_t& node);
     void tp_visit_declaration(Node::declaration_t& node);
+    void tp_visit_condition(Node::condition_t& node);
     void tp_visit_block(Node::block_t& node);
     void tp_visit_unary_operation(Node::unary_operation_t& node);
     void tp_visit_binary_operation(std::shared_ptr<Node> node);
@@ -50,6 +51,7 @@ namespace akbit::system::annotation
         [](auto                     & ) {                                  },
         [](Node::module_t           &_) { tp_visit_module(_);              },
         [](Node::declaration_t      &_) { tp_visit_declaration(_);         },
+        [](Node::condition_t        &_) { tp_visit_condition(_);           },
         [](Node::block_t            &_) { tp_visit_block(_);               },
         [](Node::unary_operation_t  &_) { tp_visit_unary_operation(_);     },
         [&](Node::binary_operation_t& ) { tp_visit_binary_operation(node); },
@@ -75,6 +77,13 @@ namespace akbit::system::annotation
     {
       tp_visit(node.type);
       tp_visit(node.value);
+    }
+
+    void tp_visit_condition(Node::condition_t& node)
+    {
+      tp_visit(node.expression);
+      tp_visit(node.clause_false);
+      tp_visit(node.clause_true);
     }
 
     void tp_visit_block(Node::block_t& node)

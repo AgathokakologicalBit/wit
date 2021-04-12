@@ -20,6 +20,7 @@ namespace akbit::system::code_generation::js
 
     std::string cg_visit_module(std::shared_ptr<Node> node, Node::module_t& val, Settings s);
     std::string cg_visit_declaration(std::shared_ptr<Node> node, Node::declaration_t& val, Settings s);
+    std::string cg_visit_condition(std::shared_ptr<Node> node, Node::condition_t& val, Settings s);
     std::string cg_visit_block(std::shared_ptr<Node> node, Node::block_t& val, Settings s);
     std::string cg_visit_unary_operation(std::shared_ptr<Node> node, Node::unary_operation_t& val, Settings s);
     std::string cg_visit_binary_operation(std::shared_ptr<Node> node, Node::binary_operation_t& val, Settings s);
@@ -49,6 +50,7 @@ namespace akbit::system::code_generation::js
         [&](auto                     & ) -> std::string { return "__UNKNOWN__";                         },
         [&](Node::module_t           &_) -> std::string { return cg_visit_module(node, _, s);           },
         [&](Node::declaration_t      &_) -> std::string { return cg_visit_declaration(node, _, s);      },
+        [&](Node::condition_t        &_) -> std::string { return cg_visit_condition(node, _, s);        },
         [&](Node::block_t            &_) -> std::string { return cg_visit_block(node, _, s);            },
         [&](Node::unary_operation_t  &_) -> std::string { return cg_visit_unary_operation(node, _, s);  },
         [&](Node::binary_operation_t &_) -> std::string { return cg_visit_binary_operation(node, _, s); },
@@ -89,6 +91,14 @@ namespace akbit::system::code_generation::js
     std::string cg_visit_declaration(std::shared_ptr<Node>, Node::declaration_t &val, Settings s)
     {
       return std::string(s.indent, ' ') + "let u" + val.name + " = " + cg_visit(val.value, s);
+    }
+
+    std::string cg_visit_condition(std::shared_ptr<Node>, Node::condition_t &val, Settings s)
+    {
+      return "(() => { if (" + cg_visit(val.expression, s)
+           + ") return " + cg_visit(val.clause_true, s) + "; else return "
+           + (val.clause_false ? cg_visit(val.clause_false, s) : std::string("null"))
+           + "; })()";
     }
 
     std::string cg_visit_block(std::shared_ptr<Node>, Node::block_t &val, Settings s)

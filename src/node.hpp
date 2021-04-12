@@ -45,12 +45,21 @@ namespace akbit::system
       bool has_errors;
     };
 
+
     struct declaration_t
     {
       std::string name;
       std::shared_ptr<Node> type;
       std::shared_ptr<Node> value;
     };
+
+    struct condition_t
+    {
+      std::shared_ptr<Node> expression;
+      std::shared_ptr<Node> clause_true;
+      std::shared_ptr<Node> clause_false;
+    };
+
 
     struct block_t
     {
@@ -121,7 +130,11 @@ public:
       unknown_t,
 
       module_t,
+      
+      // statement-like expressions
       declaration_t,
+      condition_t,
+
       block_t,
       binary_operation_t,
       unary_operation_t,

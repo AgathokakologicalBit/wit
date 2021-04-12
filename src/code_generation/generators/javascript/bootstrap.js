@@ -21,6 +21,13 @@ function so5 (l, ...a) { return a.reduce((a,c) => a % c, l); }
 function so6 (l, ...a) { return a.reduce((a,c) => a + c, l); }
 function so7 (l, ...a) { return a.reduce((a,c) => a - c, l); }
 
+function so8 (l, r) { return l >= r; }
+function so9 (l, r) { return l <= r; }
+function so10(l, r) { return l >  r; }
+function so11(l, r) { return l <  r; }
+function so12(l, r) { return l == r; }
+function so13(l, r) { return l != r; }
+
 function so20(l,    t) { return t.cast(l); }
 
 // ##END_BOOSTRAP

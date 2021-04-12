@@ -32,6 +32,7 @@ namespace
       [](auto                  &) -> std::string { return "#???";             },
       [](sn::module_t           ) -> std::string { return "module";           },
       [](sn::declaration_t      ) -> std::string { return "declaration";      },
+      [](sn::condition_t        ) -> std::string { return "condition";        },
       [](sn::binary_operation_t ) -> std::string { return "operation-binary"; },
       [](sn::unary_operation_t  ) -> std::string { return "operation-unary";  },
       [](sn::function_call_t    ) -> std::string { return "call";             },
@@ -106,23 +107,38 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       std::cout << node.name;
 
       std::cout << '\n';
-      draw_p(depth, mask );
+      draw_p(depth, mask);
       std::cout << "type: ";
       std::cout << "\x1b[97m";
-      dump_ast(node.type, depth + 1u, mask | (0ul << (depth + 1u)));
-
-      // mask |= static_cast<std::uint64_t>(1) << depth;
+      dump_ast(node.type, depth + 1u, mask);
 
       dump_ast(node.value, depth, mask);
     },
 
+    [&](Node::condition_t        &node) {
+      std::cout << '\n';
+      draw_p(depth, mask);
+      std::cout << "expression: ";
+      std::cout << "\x1b[97m";
+      dump_ast(node.expression, depth + 1u, mask);
+
+      std::cout << '\n';
+      draw_p(depth, mask);
+      std::cout << "clause_true: ";
+      std::cout << "\x1b[97m";
+      dump_ast(node.clause_true, depth + 1u, mask);
+
+      std::cout << '\n';
+      draw_p(depth, mask);
+      std::cout << "clause_false: ";
+      std::cout << "\x1b[97m";
+      dump_ast(node.clause_false, depth + 1u, mask);
+    },
+
+
     [&](Node::block_t            &node) {
       for (std::size_t i = 0; i < node.code.size(); ++i)
-      {
-        // if (i == node.code.size() - 1)
-        //   mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast(node.code[i], depth, mask);
-      }
     },
 
     [&](Node::unary_operation_t  &node) {
@@ -144,27 +160,19 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       std::cout << node.operation->representation;
 
       for (std::size_t i = 0; i < node.operands.size(); ++i)
-      {
-        // if (i == node.operands.size() - 1)
-        //   mask |= static_cast<std::uint64_t>(1) << depth;
         dump_ast(node.operands[i], depth, mask);
-      }
     },
 
     [&](Node::function_call_t    &node) {
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "expression: ";
-
-      // mask |= static_cast<std::uint64_t>(1) << (depth + 1);
-      dump_ast(node.expression, depth + 1u, mask);
-
-      // mask |= static_cast<std::uint64_t>(1) << depth;
+      dump_ast(node.expression, depth + 1u, mask | (1u << (depth + 1u)));
 
       std::cout << '\n';
       draw_p(depth, mask);
       std::cout << "arguments: ";
-      dump_ast(node.arguments, depth + 1u, mask);
+      dump_ast(node.arguments, depth + 1u, mask | (1u << (depth + 1u)));
     },
 
     [&](Node::value_function_t   &node) {
@@ -174,14 +182,9 @@ void dump_ast(std::shared_ptr<akbit::system::Node> node_, std::uint32_t depth, s
       draw_p(depth, mask | (0ul << (depth + 0u)));
       std::cout << "parameters:";
       for (std::size_t i = 0; i < node.parameters.size(); ++i)
-      {
-        auto sub_mask = mask;
-        // if (i == node.parameters.size() - 1ul)
-        //   sub_mask |= static_cast<std::uint64_t>(1) << (depth + 1u);
-        dump_ast(node.parameters[i], depth + 1, sub_mask);
-      }
+        dump_ast(node.parameters[i], depth + 1, mask);
 
-      dump_ast(node.body, depth, mask | (1ul << (depth + 0u)));
+      dump_ast(node.body, depth, mask);
     },
     [&](Node::value_tuple_t      &node) {
       std::cout << "\x1b[39m\x1b[44mTUPLE\x1b[49m";
